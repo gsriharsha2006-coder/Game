@@ -1337,6 +1337,11 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
   .page-context { width: 100%; justify-content: space-between; }
   .compact-next .btn { width: 100%; }
   .application-preview-row { grid-template-columns: 1fr; gap: 4px; }
+  .document-layout { grid-template-columns: 1fr; }
+  .version-panel { position: static; }
+  .version-list { display: flex; overflow-x: auto; }
+  .version-link { min-width: 150px; }
+  .submitted-fields { grid-template-columns: 1fr; }
 }
 
 /* ============================================================
@@ -1412,6 +1417,20 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
 .application-preview-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 18px; padding: 13px 0; border-bottom: 1px solid var(--hairline); }
 .application-preview-row dt { color: var(--ink-3); font-size: 12px; font-weight: 700; }
 .application-preview-row dd { color: var(--ink-2); font-size: 13px; white-space: pre-wrap; line-height: 1.6; }
+.document-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
+.version-panel { position: sticky; top: 96px; }
+.version-list { display: grid; gap: 6px; margin-top: 14px; }
+.version-link { display: grid; gap: 3px; padding: 11px 12px; border-radius: 10px; color: var(--ink-2); border: 1px solid transparent; }
+.version-link span, .version-link em { font-size: 11px; color: var(--ink-3); font-style: normal; }
+.version-link em { color: var(--success); font-weight: 700; }
+.version-link:hover, .version-link.active { background: var(--accent-softer); border-color: rgba(81, 72, 184, 0.20); color: var(--ink); }
+.submitted-document { min-width: 0; }
+.document-meta { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--hairline); }
+.document-meta div { display: grid; gap: 4px; }
+.document-meta span { color: var(--ink-3); font-size: 12px; }
+.submitted-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.submitted-section { padding: 18px 0; border-bottom: 1px solid var(--hairline); }
+.submitted-section p { color: var(--ink-2); font-size: 13.5px; line-height: 1.7; margin-top: 6px; white-space: pre-wrap; }
 
 /* ============================================================
    WHITE / NAVY / VIOLET THEME

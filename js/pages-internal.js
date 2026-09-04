@@ -180,6 +180,8 @@ function internalApplicationReview(id) {
       '<span class="badge badge-indigo">' + Icon("shield", 12) + ' Internal Quality Control</span>' +
     '</div>' +
 
+    '<div class="solid-panel card" style="margin-bottom:18px;padding:16px 18px"><div class="row-between" style="flex-wrap:wrap;gap:12px"><div><div class="tiny faint semibold">SUBMITTED APPLICATION</div><div class="small muted">The reviewer document is a versioned snapshot, separate from the founder\'s live workspace.</div></div><button class="btn btn-primary" onclick="App.navigate(\'#/internal/document/' + app.id + '\')">' + Icon("file", 15) + 'View Submitted Idea Workspace</button></div></div>' +
+
     '<div class="glass-strong card" style="padding:24px;margin-bottom:18px">' +
       '<div class="row-between" style="flex-wrap:wrap;gap:14px">' +
         '<div class="row" style="gap:15px">' + startupLogo(s, 50) +
@@ -197,7 +199,7 @@ function internalApplicationReview(id) {
 
     '<div class="gate-timeline" style="margin-bottom:20px">' + rail + '</div>' +
 
-    '<div class="glass card" style="margin-bottom:18px"><div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("file", 17) + '</span>Application versions</div><span class="badge badge-indigo">Latest v' + (app.currentVersion || 1) + '</span></div><div class="col" style="gap:7px">' + (app.versions || []).map(v => '<div class="product-row"><div class="product-row-main"><b>Version ' + v.version + '</b><div class="tiny faint">' + new Date(v.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + ' · Updated by ' + v.updatedBy + '</div></div>' + (v.version === app.currentVersion ? '<span class="badge badge-success">Latest</span>' : '') + '</div>').join("") + '</div></div>' +
+    '<div class="glass card" style="margin-bottom:18px"><div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("file", 17) + '</span>Application versions</div>' + (app.versions && app.versions.length ? '<span class="badge badge-indigo">Latest v' + (app.currentVersion || 1) + '</span>' : '<span class="badge badge-neutral">No snapshot</span>') + '</div><div class="col" style="gap:7px">' + (app.versions && app.versions.length ? app.versions.map(v => '<div class="product-row"><div class="product-row-main"><b>Version ' + v.version + '</b><div class="tiny faint">' + new Date(v.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + ' · Updated by ' + v.updatedBy + '</div></div>' + (v.version === app.currentVersion ? '<span class="badge badge-success">Latest</span>' : '') + '</div>').join("") : '<p class="muted small">Submitted document unavailable for this legacy application.</p>') + '</div></div>' +
 
     '<div class="stack">' +
 
@@ -295,6 +297,25 @@ function internalApplicationReview(id) {
     '</div>';
 
   return html;
+}
+
+function submittedWorkspaceDocument(id, versionNo) {
+  const app = Store.getApplication(id);
+  if (!app) return errorPage();
+  const s = Store.getStartup(app.startupId);
+  const o = Store.getOpportunity(app.opportunityId);
+  const versions = app.versions || [];
+  const selected = versions.find(v => String(v.version) === String(versionNo)) || versions[versions.length - 1];
+  if (!selected || !selected.workspace || !Object.keys(selected.workspace).length) {
+    return '<div class="empty glass"><div class="e-ic">' + Icon("file", 28) + '</div><h3>Submitted document unavailable</h3><p>This application was created before submitted-document snapshots were enabled.</p><button class="btn btn-ghost" onclick="App.navigate(\'#/internal/application/' + app.id + '\')">Back to Review</button></div>';
+  }
+  const w = selected.workspace;
+  const fields = WORKSPACE_SECTIONS.map(sec => '<section class="submitted-section"><div class="tiny faint semibold">' + sec.label.toUpperCase() + '</div><p>' + escapeHtml(w[sec.key] || "Not provided") + '</p></section>').join("");
+  const versionLinks = versions.map(v => '<a class="version-link ' + (v.version === selected.version ? "active" : "") + '" href="#/internal/document/' + app.id + '/' + v.version + '"><b>Version ' + v.version + '</b><span>' + (v.version === 1 ? "Submitted" : "Updated") + ' · ' + new Date(v.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '</span>' + (v.version === app.currentVersion ? '<em>Latest submitted version</em>' : '') + '</a>').join("");
+  const lockDate = new Date(app.submittedAt || selected.submittedAt);
+  lockDate.setDate(lockDate.getDate() + 10);
+  return '<div class="page-head"><div><a href="#/internal/application/' + app.id + '" class="small semibold" style="color:var(--accent-deep)">' + Icon("chevL", 13) + ' Back to application review</a><h1 class="h1" style="margin-top:10px">Submitted Idea Workspace</h1><p class="sub">The exact application snapshot submitted to Venture Connect.</p></div><span class="badge badge-indigo">Version ' + selected.version + '</span></div>' +
+    '<div class="document-layout"><aside class="solid-panel card version-panel"><div class="tiny faint semibold" style="letter-spacing:.08em">VERSION HISTORY</div><div class="version-list">' + versionLinks + '</div></aside><main class="glass-strong card submitted-document"><div class="document-meta"><div><b>' + s.name + '</b><span>' + s.founder.name + ' · ' + (o ? o.title : "Application") + '</span></div><div><span>Submitted ' + new Date(selected.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '</span><span>Last updated ' + new Date(selected.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '</span><span>Lock date ' + lockDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '</span></div></div><div class="submitted-fields">' + fields + '</div></main></div>';
 }
 
 /* Build a workspace-like object from a startup for the check engine */

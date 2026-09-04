@@ -322,6 +322,7 @@ const App = {
         case "dashboard": return internalDashboard();
         case "applications": return internalApplications();
         case "application": return internalApplicationReview(parts[2]);
+        case "document": return submittedWorkspaceDocument(parts[2], parts[3]);
         default: return errorPage();
       }
     }

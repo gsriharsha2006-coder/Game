@@ -85,15 +85,6 @@ const Store = (() => {
     }
     if (!app.createdAt) app.createdAt = app.submittedAt;
     if (!app.lastUpdatedAt) app.lastUpdatedAt = app.submittedAt;
-    if (!app.currentVersion) app.currentVersion = 1;
-    if (!app.versions) {
-      const startup = STARTUPS.find(s => s.id === app.startupId);
-      app.versions = [{ version: 1, submittedAt: app.submittedAt, updatedAt: app.submittedAt, updatedBy: "founder", workspace: startup ? {
-        problem: startup.problem, solution: startup.solution, targetCustomer: startup.targetCustomer, market: startup.market,
-        businessModel: startup.businessModel, validation: startup.validation, competition: startup.competition,
-        advantage: startup.advantage, funding: startup.fundingAsk, useOfFunds: startup.useOfFunds
-      } : {} }];
-    }
     return app;
   });
 
