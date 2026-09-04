@@ -361,6 +361,7 @@ function founderQualityCheck() {
 /* ---------------- FOUNDER APPLICATIONS ---------------- */
 function founderApplications() {
   const apps = Store.applicationsForStartup(Store.founder().startupId);
+  const externalApps = Store.externalApplicationsForStartup(Store.founder().startupId);
   const rows = apps.map(app => {
     const opp = Store.getOpportunity(app.opportunityId);
     const st = founderAppStatus(app);
@@ -370,14 +371,23 @@ function founderApplications() {
       '<span class="badge ' + (st.tone === "success" ? "badge-success" : st.tone === "warning" ? "badge-warning" : st.tone === "danger" ? "badge-danger" : "badge-indigo") + '">' + st.label + '</span>' +
       '<button class="btn btn-soft btn-sm" onclick="App.navigate(\'#/founder/application/' + app.id + '\')">' + Icon("eye", 13) + 'View Status</button>' +
     '</div>';
+  }).join("") + externalApps.map(activity => {
+    const opp = Store.getOpportunity(activity.opportunityId);
+    if (!opp) return "";
+    return '<div class="app-status-row">' +
+      '<div class="asr-main"><div class="semibold" style="font-size:14px">' + opp.title + '</div>' +
+      '<div class="tiny faint">' + opp.org + ' · Hackathon · Application link opened ' + activity.clickedAt + '</div></div>' +
+      '<span class="badge badge-info">' + Icon("external", 12) + 'External application</span>' +
+      '<button class="btn btn-soft btn-sm" onclick="App.navigate(\'#/founder/opportunity/' + opp.id + '\')">' + Icon("external", 13) + 'Open Opportunity</button>' +
+    '</div>';
   }).join("");
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">Applications</h1><p class="sub">Every application you submit is reviewed by Venture Connect before it reaches the investor or incubator.</p></div>' +
+      '<div><h1 class="h1">Applications</h1><p class="sub">Venture Connect applications are reviewed before reaching investors or incubators. Hackathon registration happens on the organizer\'s website.</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/founder/opportunities\')">' + Icon("plus", 15) + 'Apply to an Opportunity</button>' +
     '</div>' +
-    (apps.length
+    (apps.length || externalApps.length
       ? '<div class="glass" style="padding:14px 10px"><div class="col" style="gap:10px">' + rows + '</div></div>'
       : emptyState("send", "No applications yet", "Browse opportunities and submit your first application — Venture Connect quality control starts the moment you apply.", '<button class="btn btn-primary" style="margin-top:8px" onclick="App.navigate(\'#/founder/opportunities\')">' + Icon("briefcase", 15) + 'Explore Opportunities</button>'));
 

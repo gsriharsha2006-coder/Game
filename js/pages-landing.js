@@ -51,8 +51,6 @@ function renderLanding() {
             '<div class="pc-arrow">' + Icon("chevD", 15) + '</div>' +
             '<div class="pc-node" style="margin-bottom:0"><span class="node-ic" style="background:#0ea472">' + Icon("eye", 17) + '</span><span>Investor / Incubator<span class="node-sub">Quality-gated applications only</span></span></div>' +
           '</div>' +
-          '<div class="eco-chip indigo float-slow" style="top:30px;left:-12px"><span class="dot-ic">' + Icon("clock", 15) + '</span><span>Application Under Review<span class="chip-sub">Clear status at every step</span></span></div>' +
-          '<div class="eco-chip violet float-mid" style="bottom:70px;right:-8px"><span class="dot-ic">' + Icon("shield", 15) + '</span><span>Quality Gate<span class="chip-sub">Internal — Venture Connect verifies</span></span></div>' +
         '</div>' +
       '</section>' +
 
@@ -97,8 +95,8 @@ function renderLanding() {
         '<div class="glass card" style="padding:24px;background:var(--glass-strong);order:2">' +
           '<div class="small faint semibold" style="letter-spacing:.1em;margin-bottom:12px">AN INVESTOR RECEIVES</div>' +
           '<div class="col" style="gap:10px">' +
-            '<div class="list-row"><span class="badge badge-success" style="padding:2px 8px">' + Icon("shield", 11) + '</span><div class="lr-main"><div class="semibold" style="font-size:13.5px">FieldPilot</div><div class="tiny faint">Applied to Campus Climate Fund 2026 · Gate passed</div></div><button class="btn btn-soft btn-sm" disabled style="opacity:1">Review</button></div>' +
-            '<div class="list-row"><span class="badge badge-success" style="padding:2px 8px">' + Icon("shield", 11) + '</span><div class="lr-main"><div class="semibold" style="font-size:13.5px">PayPulse</div><div class="tiny faint">Applied to Campus Climate Fund 2026 · Gate passed</div></div><button class="btn btn-soft btn-sm" disabled style="opacity:1">Review</button></div>' +
+            '<div class="list-row"><span class="badge badge-success" style="padding:2px 8px">' + Icon("shield", 11) + '</span><div class="lr-main"><div class="semibold" style="font-size:13.5px">FieldPilot</div><div class="tiny faint">Applied to Campus Climate Fund 2026 · Gate passed</div></div><span class="badge badge-success">Qualified</span></div>' +
+            '<div class="list-row"><span class="badge badge-success" style="padding:2px 8px">' + Icon("shield", 11) + '</span><div class="lr-main"><div class="semibold" style="font-size:13.5px">PayPulse</div><div class="tiny faint">Applied to Campus Climate Fund 2026 · Gate passed</div></div><span class="badge badge-success">Qualified</span></div>' +
           '</div>' +
           '<p class="tiny faint" style="margin-top:14px">' + Icon("shield", 11) + ' Every application arrives quality-gated. No raw idea dumps.</p>' +
         '</div>' +

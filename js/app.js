@@ -413,7 +413,7 @@ const App = {
             '<img class="lg-sm" src="assets/logo/logo-icon.png" alt="Venture Connect" />' +
           '</a>' +
           '<div class="side-nav">' +
-            '<div class="nav-label">' + (role === "internal" ? "Venture Connect" : role === "investor" ? "Investor" : "Founder") + '</div>' +
+            '<div class="nav-label">' + (role === "internal" ? "Venture Connect" : role === "investor" ? "Investor" : role === "incubator" ? "Incubator" : role === "organizer" ? "Organizer" : "Founder") + '</div>' +
             sidebarNav +
           '</div>' +
           '<div class="side-foot">' +
@@ -520,8 +520,32 @@ const App = {
   invSort(v) { invFilter.sort = v; this.render(); },
   invFilterSector(s) { invFilter.sector = s; this.render(); },
   oppFilter(c) { oppFilter = c; this.render(); },
+  founderOppSearch(v) { founderOppQuery = v; this.render(); },
+  founderOppType(v) { founderOppType = v; this.render(); },
+  founderOppSector(v) { founderOppSector = v; this.render(); },
+  founderOppLocation(v) { founderOppLocation = v; this.render(); },
+  founderOppSort(v) { founderOppSort = v; this.render(); },
   oppMgmtFilter(v) { oppMgmtFilter = v; this.render(); },
   invAppFilter(v) { invAppFilter = v; this.render(); },
+  opportunityTypeChange() {
+    const type = val("of-type");
+    const wrap = document.getElementById("of-external-wrap");
+    if (wrap) wrap.style.display = type === "Hackathon" ? "block" : "none";
+    const publish = document.getElementById("of-publish");
+    if (publish) publish.innerHTML = Icon("checkCircle", 15) + (type === "Hackathon" ? "Publish Hackathon" : "Publish Opportunity");
+  },
+  previewOpportunity() {
+    const title = val("of-title") || "Untitled opportunity";
+    const type = val("of-type");
+    const external = type === "Hackathon";
+    openModal(
+      '<div class="modal-head"><h3 class="h3">Preview</h3><button class="modal-close" onclick="closeModal()">' + Icon("x", 15) + '</button></div>' +
+      '<div class="badge ' + (external ? "badge-info" : "badge-violet") + '" style="margin-bottom:10px">' + (external ? 'External application' : (type || 'Opportunity')) + '</div>' +
+      '<h2 class="h2">' + escapeHtml(title) + '</h2>' +
+      '<p class="small muted" style="margin-top:8px;line-height:1.6">' + escapeHtml(val("of-desc") || "No description added yet.") + '</p>' +
+      (external ? '<p class="small" style="margin-top:14px;color:var(--info)">' + Icon("external", 13) + ' Application handled on organizer\'s website.</p>' : '')
+    );
+  },
 
   toggleSaved(id, el) {
     const now = Store.toggleSaved(id);
@@ -562,19 +586,29 @@ const App = {
 
   /* ---------------- opportunity actions (investor) ---------------- */
   saveOpportunity(id, status) {
+    const typeLabel = val("of-type");
+    const isHackathon = typeLabel === "Hackathon";
     const data = {
       title: val("of-title"), org: val("of-org"),
-      category: (OPP_TYPES.find(t => t[0] === val("of-type")) || [null, "Other"])[1],
-      typeLabel: val("of-type"),
+      category: (OPP_TYPES.find(t => t[0] === typeLabel) || [null, "Other"])[1],
+      typeLabel, type: isHackathon ? "hackathon" : "opportunity",
+      applicationMode: isHackathon ? "external" : "internal",
+      applicationUrl: val("of-application-url"),
       sector: val("of-sector"), stage: val("of-stage"),
       eligibility: val("of-elig"), desc: val("of-desc"),
       deadline: val("of-deadline"), startDate: val("of-startdate"),
       location: val("of-location"), funding: val("of-funding"),
-      equity: val("of-equity"), duration: val("of-duration"),
-      perks: []
+      equity: val("of-equity"), duration: val("of-duration"), eventDate: val("of-event-date"),
+      teamRequirements: val("of-team"), perks: val("of-perks").split(",").map(x => x.trim()).filter(Boolean)
     };
     if (!data.title.trim()) { toast("Opportunity title is required", "error", "alert"); return; }
     if (!data.org.trim()) { toast("Organization is required", "error", "alert"); return; }
+    if (isHackathon && (status === "publish" || data.applicationUrl.trim())) {
+      let validUrl = false;
+      try { const parsed = new URL(data.applicationUrl.trim()); validUrl = parsed.protocol === "http:" || parsed.protocol === "https:"; } catch (e) { validUrl = false; }
+      if (!validUrl) { toast("Please add a valid official application URL.", "error", "alert"); return; }
+      data.applicationUrl = data.applicationUrl.trim();
+    }
     const finalStatus = status === "publish" ? "published" : "draft";
     if (id) {
       Store.updateOpportunity(id, Object.assign(data, { status: finalStatus === "published" && Store.getOpportunity(id).status === "published" ? "published" : finalStatus }));
@@ -592,11 +626,32 @@ const App = {
   applyNow(oppId) {
     const o = Store.getOpportunity(oppId);
     if (!o) return;
+    if (o.applicationMode === "external" || o.type === "hackathon") {
+      this.confirmExternalApplication(oppId);
+      return;
+    }
     const exists = Store.applicationsForStartup(Store.founder().startupId).some(a => a.opportunityId === oppId);
     if (exists) { toast("You have already applied to this opportunity", "info", "info"); return; }
     const app = Store.createApplication(Store.founder().startupId, oppId);
     toast("Application submitted — Venture Connect quality control has begun", "success", "send");
     this.navigate("#/founder/application/" + app.id);
+  },
+  confirmExternalApplication(oppId) {
+    const o = Store.getOpportunity(oppId);
+    if (!o || !/^https?:\/\//i.test(o.applicationUrl || "")) { toast("This hackathon does not have a usable application URL yet.", "error", "alert"); return; }
+    openModal(
+      '<div class="modal-head"><h3 class="h3">You\'re leaving Venture Connect</h3><button class="modal-close" onclick="closeModal()">' + Icon("x", 15) + '</button></div>' +
+      '<p class="muted small" style="line-height:1.6">You\'ll be redirected to the official application page for <b>' + escapeHtml(o.title) + '</b>. Application and registration are handled by the organizer.</p>' +
+      '<div class="row" style="justify-content:flex-end;margin-top:20px"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="App.openExternalApplication(\'' + o.id + '\')">' + Icon("external", 15) + 'Continue to Application</button></div>'
+    );
+  },
+  openExternalApplication(oppId) {
+    const o = Store.getOpportunity(oppId);
+    if (!o || !/^https?:\/\//i.test(o.applicationUrl || "")) { closeModal(); toast("This hackathon does not have a usable application URL yet.", "error", "alert"); return; }
+    Store.recordExternalApplicationClick(oppId);
+    closeModal();
+    window.open(o.applicationUrl, "_blank", "noopener,noreferrer");
+    toast("Application link opened — the organizer handles registration", "info", "external");
   },
 
   /* ---------------- founder workspace actions ---------------- */

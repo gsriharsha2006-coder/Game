@@ -47,7 +47,8 @@ const Store = (() => {
       messages: JSON.parse(JSON.stringify(DEFAULT_MESSAGES)),
       notifications: JSON.parse(JSON.stringify(DEFAULT_NOTIFICATIONS)),
       notifRead: false,
-      reviewResults: {} // startupId -> { status, ranAt }
+      reviewResults: {}, // startupId -> { status, ranAt }
+      externalApplications: []
     };
   }
 
@@ -63,6 +64,20 @@ const Store = (() => {
   if (!state.organizer) state.organizer = Object.assign({}, DEMO_ORGANIZER);
   if (!state.userStartups) state.userStartups = [];
   if (!("session" in state)) state.session = null;
+  if (!state.externalApplications) state.externalApplications = [];
+  state.opportunities.forEach(o => {
+    if (o.category === "Hackathons") {
+      o.type = "hackathon";
+      o.applicationMode = "external";
+      if (!o.applicationUrl && o.id === "hack-the-valley") o.applicationUrl = "https://hackthevalley.dev/register";
+      if (!o.applicationUrl && o.id === "healthtech-bootcamp") o.applicationUrl = "https://medfuture.example/bootcamp/register";
+      if (!o.teamRequirements && o.id === "hack-the-valley") o.teamRequirements = "Teams of 2–5";
+      if (!o.teamRequirements && o.id === "healthtech-bootcamp") o.teamRequirements = "Student teams";
+      if (!o.eventDate) o.eventDate = o.startDate || "";
+    } else if (!o.applicationMode) {
+      o.applicationMode = "internal";
+    }
+  });
 
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
@@ -406,6 +421,18 @@ const Store = (() => {
     const o = state.opportunities.find(x => x.id === id);
     if (o) { o.views = (o.views || 0) + 1; save(); }
   };
+  const recordExternalApplicationClick = (id) => {
+    const o = state.opportunities.find(x => x.id === id);
+    if (!o) return null;
+    o.applicationLinkClicks = (o.applicationLinkClicks || 0) + 1;
+    const startupId = state.founder && state.founder.startupId;
+    if (startupId && !state.externalApplications.some(x => x.startupId === startupId && x.opportunityId === id)) {
+      state.externalApplications.unshift({ startupId, opportunityId: id, clickedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
+    }
+    save();
+    return o.applicationLinkClicks;
+  };
+  const externalApplicationsForStartup = (startupId) => state.externalApplications.filter(x => x.startupId === startupId);
 
   /* ---------------- applications (founder + startup + opportunity + org) ---------------- */
   const getApplications = () => state.applications;
@@ -497,7 +524,7 @@ const Store = (() => {
   }
 
   return {
-    state, save, reset,
+    get state() { return state; }, save, reset,
     getRole, setRole, founder, investor, incubator, organizer, internal, me, org,
     sessionUser, accounts, findAccount, registerAccount, login, setSession, signOut, addUserStartup,
     myStartup, getStartup,
@@ -511,7 +538,7 @@ const Store = (() => {
     visibleStartups, passedStartups, recommendedIds,
     DEFAULT_WORKSPACE,
     getOpportunities, getOpportunity, myOpportunities,
-    createOpportunity, updateOpportunity, closeOpportunity, reopenOpportunity, incrementViews,
+    createOpportunity, updateOpportunity, closeOpportunity, reopenOpportunity, incrementViews, recordExternalApplicationClick, externalApplicationsForStartup,
     getApplications, getApplication, applicationsForStartup, applicationsForOrg,
     oppApplicationCount, oppQualifiedCount, oppInterestedCount,
     createApplication, updateApplication, advanceApp, setGate, unlockApp, rejectApp

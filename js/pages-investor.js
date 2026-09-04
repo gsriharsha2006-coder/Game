@@ -386,13 +386,14 @@ function investorOpportunities() {
     '<div class="list-row">' +
       '<div class="lr-main"><div class="semibold" style="font-size:14px">' + o.title + '</div>' +
       '<div class="tiny faint">' + o.org + ' · Deadline ' + o.deadline + ' · ' + o.views + ' views</div></div>' +
-      '<div class="lr-cell">' + Store.oppApplicationCount(o.id) + ' apps</div>' +
-      '<div class="lr-cell">' + Store.oppQualifiedCount(o.id) + ' qualified</div>' +
-      '<div class="lr-cell">' + Store.oppInterestedCount(o.id) + ' interested</div>' +
+      (o.applicationMode === "external" ? '<div class="lr-cell">' + (o.applicationLinkClicks || 0) + ' link clicks</div>' :
+        '<div class="lr-cell">' + Store.oppApplicationCount(o.id) + ' apps</div>' +
+        '<div class="lr-cell">' + Store.oppQualifiedCount(o.id) + ' qualified</div>' +
+        '<div class="lr-cell">' + Store.oppInterestedCount(o.id) + ' interested</div>') +
       (o.status === "published" ? '<span class="badge badge-success">' + Icon("check", 11) + ' Published</span>' : o.status === "draft" ? '<span class="badge badge-neutral">Draft</span>' : '<span class="badge badge-neutral">Closed</span>') +
       '<div class="row" style="gap:6px">' +
         '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/' + Store.getRole() + '/opportunity/edit/' + o.id + '\')">' + Icon("edit", 13) + 'Edit</button>' +
-        '<button class="btn btn-soft btn-sm" onclick="App.navigate(\'#/' + Store.getRole() + '/applications/' + o.id + '\')">' + Icon("eye", 13) + 'Applications</button>' +
+        (o.applicationMode === "external" ? '<span class="badge badge-info">' + Icon("external", 11) + 'External application</span>' : '<button class="btn btn-soft btn-sm" onclick="App.navigate(\'#/' + Store.getRole() + '/applications/' + o.id + '\')">' + Icon("eye", 13) + 'Applications</button>') +
         (o.status === "published"
           ? '<button class="btn btn-ghost btn-sm" onclick="App.closeOpp(\'' + o.id + '\')">' + Icon("x", 13) + 'Close</button>'
           : o.status === "closed"
@@ -431,6 +432,7 @@ function opportunityFormPage(id) {
 
   const v = (k, def) => o ? (o[k] || def || "") : (def || "");
   const typeVal = o ? (OPP_TYPES.find(t => t[1] === o.category) || [o.category, o.category])[0] : "Incubator Program";
+  const isHackathon = typeVal === "Hackathon";
 
   const selectOptions = (arr, cur) => arr.map(x => '<option value="' + x + '"' + (x === cur ? " selected" : "") + '>' + x + '</option>').join("");
 
@@ -446,8 +448,8 @@ function opportunityFormPage(id) {
       '<div class="opp-form-section"><div class="h3"><span class="card-title-ic">' + Icon("edit", 15) + '</span>Basic information</div>' +
         '<div class="form-grid">' +
           '<div class="field"><label>Opportunity title <span class="req">*</span></label><input class="input" id="of-title" value="' + escapeHtml(v("title")) + '" placeholder="e.g. AgriTech Student Accelerator 2026" /></div>' +
-          '<div class="field"><label>Organization <span class="req">*</span></label><input class="input" id="of-org" value="' + escapeHtml(v("org", Store.investor().org)) + '" /></div>' +
-          '<div class="field"><label>Opportunity type</label><select class="select" id="of-type">' + selectOptions(OPP_TYPES.map(t => t[0]), typeVal) + '</select></div>' +
+          '<div class="field"><label>Organization <span class="req">*</span></label><input class="input" id="of-org" value="' + escapeHtml(v("org", Store.org())) + '" /></div>' +
+          '<div class="field"><label>Opportunity type</label><select class="select" id="of-type" onchange="App.opportunityTypeChange()">' + selectOptions(OPP_TYPES.map(t => t[0]), typeVal) + '</select></div>' +
           '<div class="field"><label>Sector</label><select class="select" id="of-sector">' + selectOptions(OPP_SECTORS, v("sector", "Other")) + '</select></div>' +
           '<div class="field"><label>Startup stage</label><select class="select" id="of-stage">' + selectOptions(OPP_STAGES, v("stage", "Idea")) + '</select></div>' +
           '<div class="field"><label>Eligibility</label><input class="input" id="of-elig" value="' + escapeHtml(v("eligibility")) + '" placeholder="e.g. Student founders with early prototypes" /></div>' +
@@ -466,13 +468,21 @@ function opportunityFormPage(id) {
           '<div class="field"><label>Funding / Support offered</label><input class="input" id="of-funding" value="' + escapeHtml(v("funding")) + '" placeholder="e.g. $25,000 + workspace" /></div>' +
           '<div class="field"><label>Equity requirement</label><input class="input" id="of-equity" value="' + escapeHtml(v("equity", "None")) + '" placeholder="e.g. 6% or None" /></div>' +
           '<div class="field"><label>Program duration</label><input class="input" id="of-duration" value="' + escapeHtml(v("duration")) + '" placeholder="e.g. 12 weeks" /></div>' +
+          '<div class="field"><label>Team requirements</label><input class="input" id="of-team" value="' + escapeHtml(v("teamRequirements")) + '" placeholder="e.g. Teams of 2–5" /></div>' +
+          '<div class="field"><label>Prizes / Benefits</label><input class="input" id="of-perks" value="' + escapeHtml((o && o.perks || []).join(", ")) + '" placeholder="Separate benefits with commas" /></div>' +
+          '<div class="field"><label>Event date</label><input class="input" id="of-event-date" value="' + escapeHtml(v("eventDate")) + '" placeholder="e.g. Oct 2, 2026" /></div>' +
         '</div>' +
+      '</div>' +
+
+      '<div class="opp-form-section" id="of-external-wrap" style="display:' + (isHackathon ? "block" : "none") + '"><div class="h3"><span class="card-title-ic amber">' + Icon("external", 15) + '</span>Official registration</div>' +
+        '<div class="field"><label>Official Application / Registration URL' + (isHackathon ? ' <span class="req">*</span>' : '') + '</label><input class="input" id="of-application-url" type="url" value="' + escapeHtml(v("applicationUrl")) + '" placeholder="https://examplehackathon.com/register" /><div class="hint">Add the official registration page where participants should apply for this hackathon.</div></div>' +
       '</div>' +
 
       '<div class="row" style="justify-content:flex-end;gap:10px;margin-top:8px">' +
         '<button class="btn btn-ghost" onclick="App.navigate(\'#/' + Store.getRole() + '/opportunities\')">Cancel</button>' +
+        '<button class="btn btn-ghost" onclick="App.previewOpportunity()">' + Icon("eye", 15) + 'Preview</button>' +
         '<button class="btn btn-ghost" onclick="App.saveOpportunity(\'' + (editing ? o.id : "") + '\', \'draft\')">' + Icon("download", 15) + 'Save Draft</button>' +
-        '<button class="btn btn-primary" onclick="App.saveOpportunity(\'' + (editing ? o.id : "") + '\', \'publish\')">' + Icon("checkCircle", 15) + (editing ? 'Save &amp; Publish' : 'Publish Opportunity') + '</button>' +
+        '<button class="btn btn-primary" id="of-publish" onclick="App.saveOpportunity(\'' + (editing ? o.id : "") + '\', \'publish\')">' + Icon("checkCircle", 15) + (isHackathon ? 'Publish Hackathon' : (editing ? 'Save &amp; Publish' : 'Publish Opportunity')) + '</button>' +
       '</div>' +
     '</div>';
 
@@ -482,6 +492,7 @@ function opportunityFormPage(id) {
 /* ---------------- APPLICATIONS (to my opportunities) ---------------- */
 function investorApplications(oppId) {
   const org = Store.org();
+  const organizer = Store.getRole() === "organizer";
   const myOpps = Store.myOpportunities(org);
   let apps = Store.applicationsForOrg(org).filter(a => a.gate && a.gate.decision === "passed" && a.stage >= 7 && a.investorAction !== "rejected");
   if (oppId) apps = apps.filter(a => a.opportunityId === oppId);
@@ -508,7 +519,7 @@ function investorApplications(oppId) {
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">Applications</h1><p class="sub">Quality-gated applications submitted to your opportunities. No raw applications — Venture Connect verified every one of these.</p></div>' +
+      '<div><h1 class="h1">Applications</h1><p class="sub">' + (organizer ? 'Venture Connect applications appear here only when they use the internal review process. Hackathon registration stays on the organizer\'s website.' : 'Quality-gated applications submitted to your opportunities. No raw applications — Venture Connect verified every one of these.') + '</p></div>' +
       '<span class="badge badge-success">' + Icon("shield", 12) + ' ' + apps.length + ' qualified</span>' +
     '</div>' +
     '<div class="row-wrap" style="margin-bottom:18px">' + chips.map(c =>
@@ -517,7 +528,7 @@ function investorApplications(oppId) {
     (rows
       ? '<div class="glass" style="padding:12px 10px"><div class="col" style="gap:10px">' + rows + '</div>' +
         '<p class="tiny faint" style="padding:10px 14px 4px">' + Icon("lock", 11) + ' Marking Interested unlocks messaging with the founder. Reject hides the application from this list.</p></div>'
-      : emptyState("shield", "No qualified applications yet", "When an application to your opportunity passes the Venture Connect Quality Gate, it appears here."));
+      : emptyState("shield", organizer ? "No Venture Connect applications yet" : "No qualified applications yet", organizer ? "External hackathon registrations are handled on the official event website." : "When an application to your opportunity passes the Venture Connect Quality Gate, it appears here."));
 
   return html;
 }
@@ -604,7 +615,7 @@ function organizerDashboard() {
   const html =
     '<div class="page-head">' +
       '<div><h1 class="h1">Organizer Dashboard</h1>' +
-      '<p class="sub">Post hackathons and startup opportunities, receive applications, and discover student talent.</p></div>' +
+      '<p class="sub">Publish hackathons, share official registration links, and track interest from student founders.</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/organizer/opportunity/new\')">' + Icon("plus", 15) + 'Create Opportunity</button>' +
     '</div>' +
 
@@ -625,7 +636,7 @@ function organizerDashboard() {
       '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/organizer/opportunities\')">Manage</button></div>' +
       (myOpps.slice(0, 3).map(o =>
         '<div class="list-row"><div class="lr-main"><div class="semibold" style="font-size:13.5px">' + o.title + '</div>' +
-        '<div class="tiny faint">Deadline ' + o.deadline + ' · ' + Store.oppApplicationCount(o.id) + ' applications</div></div>' +
+        '<div class="tiny faint">Deadline ' + o.deadline + (o.applicationMode === "external" ? ' · ' + (o.applicationLinkClicks || 0) + ' application-link clicks' : ' · ' + Store.oppApplicationCount(o.id) + ' applications') + '</div></div>' +
         (o.status === "published" ? '<span class="badge badge-success">' + Icon("check", 11) + ' Published</span>' : o.status === "draft" ? '<span class="badge badge-neutral">Draft</span>' : '<span class="badge badge-neutral">Closed</span>') + '</div>'
       ).join("") || '<p class="muted small">No opportunities yet — create your first one.</p>') +
     '</div>' +

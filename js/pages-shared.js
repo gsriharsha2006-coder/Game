@@ -5,10 +5,26 @@
 
 /* ---------------- FOUNDER OPPORTUNITIES ---------------- */
 let oppFilter = "All";
+let founderOppQuery = "";
+let founderOppType = "All";
+let founderOppSector = "All";
+let founderOppLocation = "All";
+let founderOppSort = "relevance";
 
 function founderOpportunities() {
   const list = Store.getOpportunities().filter(o => o.status === "published");
-  const filtered = oppFilter === "All" ? list : list.filter(o => o.category === oppFilter);
+  let filtered = oppFilter === "All" ? list : list.filter(o => o.category === oppFilter);
+  const query = founderOppQuery.trim().toLowerCase();
+  if (query) filtered = filtered.filter(o => [o.title, o.org, o.desc, o.eligibility, o.category].join(" ").toLowerCase().includes(query));
+  if (founderOppType !== "All") filtered = filtered.filter(o => (o.typeLabel || o.category) === founderOppType);
+  if (founderOppSector !== "All") filtered = filtered.filter(o => (o.sector || "Other") === founderOppSector);
+  if (founderOppLocation !== "All") filtered = filtered.filter(o => (o.location || "Remote") === founderOppLocation);
+  if (founderOppSort === "title") filtered = [...filtered].sort((a, b) => a.title.localeCompare(b.title));
+  if (founderOppSort === "deadline") filtered = [...filtered].sort((a, b) => String(a.deadline).localeCompare(String(b.deadline)));
+
+  const typeOptions = [...new Set(list.map(o => o.typeLabel || o.category))].sort();
+  const sectorOptions = [...new Set(list.map(o => o.sector || "Other"))].sort();
+  const locationOptions = [...new Set(list.map(o => o.location || "Remote"))].sort();
 
   const chips = ["All", ...OPP_CATEGORIES].map(c =>
     '<button class="chip' + (oppFilter === c ? " active" : "") + '" onclick="App.oppFilter(\'' + c + '\')">' + c + '</button>'
@@ -19,13 +35,22 @@ function founderOpportunities() {
       '<div><h1 class="h1">Opportunities</h1><p class="sub">Incubators, accelerators, grants, and investors looking for student ventures. Apply — Venture Connect handles the quality process.</p></div>' +
     '</div>' +
 
+    '<div class="marketplace-tools glass" style="padding:12px 14px;margin-bottom:20px">' +
+      '<div class="search-box" style="flex:1;min-width:220px"><span>' + Icon("search", 15) + '</span><input class="input" aria-label="Search opportunities" placeholder="Search opportunities" value="' + escapeHtml(founderOppQuery) + '" oninput="App.founderOppSearch(this.value)" /></div>' +
+      '<div class="marketplace-selects">' +
+        '<select class="select" aria-label="Filter by type" onchange="App.founderOppType(this.value)"><option value="All">All types</option>' + typeOptions.map(x => '<option value="' + escapeHtml(x) + '"' + (founderOppType === x ? ' selected' : '') + '>' + escapeHtml(x) + '</option>').join("") + '</select>' +
+        '<select class="select" aria-label="Filter by domain" onchange="App.founderOppSector(this.value)"><option value="All">All domains</option>' + sectorOptions.map(x => '<option value="' + escapeHtml(x) + '"' + (founderOppSector === x ? ' selected' : '') + '>' + escapeHtml(x) + '</option>').join("") + '</select>' +
+        '<select class="select" aria-label="Filter by location" onchange="App.founderOppLocation(this.value)"><option value="All">All locations</option>' + locationOptions.map(x => '<option value="' + escapeHtml(x) + '"' + (founderOppLocation === x ? ' selected' : '') + '>' + escapeHtml(x) + '</option>').join("") + '</select>' +
+        '<select class="select" aria-label="Sort opportunities" onchange="App.founderOppSort(this.value)"><option value="relevance"' + (founderOppSort === "relevance" ? ' selected' : '') + '>Recommended</option><option value="deadline"' + (founderOppSort === "deadline" ? ' selected' : '') + '>Deadline</option><option value="title"' + (founderOppSort === "title" ? ' selected' : '') + '>Name</option></select>' +
+      '</div>' +
+    '</div>' +
     '<div class="row-wrap" style="margin-bottom:20px">' + chips + '</div>' +
 
     (filtered.length
       ? '<div class="grid-3">' + filtered.map(o => {
           const applied = Store.applicationsForStartup(Store.founder().startupId).find(a => a.opportunityId === o.id);
           return '<div class="glass card glass-hover opp-card fade-up">' +
-            '<span class="badge badge-violet opp-cat">' + o.category + '</span>' +
+            '<span class="badge ' + (o.applicationMode === "external" ? "badge-info" : "badge-violet") + ' opp-cat">' + (o.applicationMode === "external" ? Icon("external", 11) + 'External application' : o.category) + '</span>' +
             '<div class="opp-title">' + o.title + '</div>' +
             '<div class="opp-org">' + Icon("briefcase", 13) + ' ' + o.org + '</div>' +
             '<div class="row-wrap">' +
@@ -37,7 +62,7 @@ function founderOpportunities() {
             '<div class="tiny faint" style="margin-bottom:4px">Eligibility: ' + (o.eligibility || "Open to student founders") + '</div>' +
             '<div class="opp-meta">' +
               '<span class="opp-deadline">' + Icon("calendar", 12) + ' Deadline: <b>' + o.deadline + '</b></span>' +
-              '<button class="btn ' + (applied ? "btn-ghost" : "btn-primary") + ' btn-sm" onclick="App.navigate(\'' + (applied ? '#/founder/application/' + applied.id : '#/founder/opportunity/' + o.id) + '\')">' + (applied ? Icon("eye", 13) + 'View Application' : Icon("arrowR", 13) + 'Apply Now') + '</button>' +
+              '<button class="btn ' + (applied ? "btn-ghost" : "btn-primary") + ' btn-sm" onclick="App.navigate(\'' + (applied ? '#/founder/application/' + applied.id : '#/founder/opportunity/' + o.id) + '\')">' + (applied ? Icon("eye", 13) + 'View Application' : Icon("arrowR", 13) + (o.applicationMode === "external" ? 'View Hackathon' : 'Apply Now')) + '</button>' +
             '</div>' +
           '</div>';
         }).join("") + '</div>'
@@ -55,19 +80,23 @@ function founderOpportunityDetail(id) {
   const already = Store.applicationsForStartup(Store.founder().startupId).find(a => a.opportunityId === id);
   const appStatus = already ? founderAppStatus(already) : null;
   const closed = o.status !== "published";
+  const external = o.applicationMode === "external" || o.type === "hackathon";
+  const externalReady = /^https?:\/\//i.test(o.applicationUrl || "");
 
   return '<div class="page-head">' +
       '<div><a href="#/founder/opportunities" class="small semibold" style="color:var(--accent-deep)">' + Icon("chevL", 13) + ' All opportunities</a></div>' +
     '</div>' +
     '<div class="glass-strong card" style="padding:28px;max-width:780px;margin:0 auto">' +
       '<div class="row-between" style="flex-wrap:wrap;gap:12px;margin-bottom:6px">' +
-        '<span class="badge badge-violet">' + o.category + '</span>' +
+        '<span class="badge ' + (external ? "badge-info" : "badge-violet") + '">' + (external ? Icon("external", 12) + 'External application' : o.category) + '</span>' +
         '<span class="badge badge-neutral">' + (o.sector || "Other") + '</span>' +
       '</div>' +
       '<h1 class="h2" style="margin:10px 0 4px">' + o.title + '</h1>' +
       '<div class="small muted">' + Icon("briefcase", 12) + ' ' + o.org + ' · ' + Icon("mapPin", 12) + ' ' + (o.location || "Remote") + '</div>' +
 
-      (already
+      (external
+        ? '<div class="status-banner info" style="margin-top:18px"><span class="sb-ic">' + Icon("external", 20) + '</span><div><b>Application handled by organizer</b><p>Application and registration happen on the organizer\'s official website.</p></div></div>'
+        : already
         ? '<div class="status-banner success" style="margin-top:18px"><span class="sb-ic">' + Icon("send", 20) + '</span>' +
             '<div><b>Application Submitted</b><p>' + appStatus.label + ' · Venture Connect quality control is underway.</p></div>' +
             '<button class="btn btn-primary" onclick="App.navigate(\'#/founder/application/' + already.id + '\')">' + Icon("eye", 14) + 'View Status</button></div>'
@@ -76,7 +105,7 @@ function founderOpportunityDetail(id) {
           : '') +
 
       '<div class="divider"></div>' +
-      '<div class="semibold small" style="margin-bottom:8px">About the opportunity</div>' +
+      '<div class="semibold small" style="margin-bottom:8px">' + (external ? 'About' : 'About the opportunity') + '</div>' +
       '<p class="muted" style="line-height:1.7;font-size:14.5px;margin-bottom:18px">' + o.desc + '</p>' +
 
       '<div class="grid-2">' +
@@ -90,16 +119,19 @@ function founderOpportunityDetail(id) {
 
       '<div style="padding:15px 17px;border-radius:15px;background:rgba(255,255,255,.55);border:1px solid var(--hairline);margin:18px 0">' +
         '<div class="kv" style="grid-template-columns:150px 1fr">' +
+          (external ? '<dt>Domains</dt><dd>' + (o.sector || "Other") + '</dd><dt>Team requirements</dt><dd>' + (o.teamRequirements || "—") + '</dd><dt>Event date</dt><dd>' + (o.eventDate || o.startDate || "—") + '</dd>' : '') +
           '<dt>Funding / Support</dt><dd>' + (o.funding || "—") + '</dd>' +
           '<dt>Equity</dt><dd>' + (o.equity || "None") + '</dd>' +
           '<dt>Timeline</dt><dd>' + (o.duration || "—") + (o.startDate ? " · starts " + o.startDate : "") + '</dd>' +
           '<dt>Deadline</dt><dd>' + o.deadline + '</dd>' +
           '<dt>Location</dt><dd>' + (o.location || "Remote") + '</dd>' +
-          '<dt>Application requirements</dt><dd style="font-weight:500">Completed Idea Workspace with strong answers — Venture Connect runs automated checks, review, pitch, interview, and evidence verification before the investor sees your application.</dd>' +
+          '<dt>' + (external ? 'Application' : 'Application requirements') + '</dt><dd style="font-weight:500">' + (external ? 'Handled on the organizer\'s official website.' : 'Completed Idea Workspace with strong answers — Venture Connect runs automated checks, review, pitch, interview, and evidence verification before the investor sees your application.') + '</dd>' +
         '</div>' +
       '</div>' +
 
-      (already
+      (external
+        ? (closed ? '' : '<button class="btn btn-primary btn-block btn-lg" ' + (externalReady ? '' : 'disabled ') + 'onclick="App.applyNow(\'' + o.id + '\')">' + Icon("external", 16) + 'Apply on Organizer Website</button>' + (!externalReady ? '<p class="tiny faint" style="text-align:center;margin-top:8px">The organizer has not added a valid application URL yet.</p>' : ''))
+        : already
         ? '<button class="btn btn-soft btn-block btn-lg" onclick="App.navigate(\'#/founder/applications\')">' + Icon("layers", 15) + 'View My Applications</button>'
         : closed
           ? ''
