@@ -526,6 +526,14 @@ const INTERNAL_STAGES = [
    Quality Gate pipeline is never exposed as a founder-controlled flow) */
 function founderAppStatus(app) {
   if (!app) return { label: "Application Submitted", tone: "info" };
+  if (typeof Store !== "undefined" && Store.applicationStatus) {
+    const lifecycleStatus = Store.applicationStatus(app);
+    if (lifecycleStatus === "Editing Window Open" || lifecycleStatus === "Updated — Under Review") return { label: lifecycleStatus, tone: "info" };
+    if (lifecycleStatus === "Review Target Reached") return { label: lifecycleStatus, tone: "warning" };
+    if (lifecycleStatus === "Clarification Requested") return { label: lifecycleStatus, tone: "warning" };
+    if (lifecycleStatus === "Approved for Organization Review") return { label: lifecycleStatus, tone: "success" };
+    if (lifecycleStatus === "Not Approved") return { label: lifecycleStatus, tone: "danger" };
+  }
   if (app.rejected) return { label: "Not Selected", tone: "danger" };
   if (app.needsRevision) return { label: "Needs Revision", tone: "warning" };
   const st = app.stage;

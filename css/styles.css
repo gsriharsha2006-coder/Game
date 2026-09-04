@@ -1336,6 +1336,7 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
   .marketplace-selects .select { width: 100%; min-width: 0; }
   .page-context { width: 100%; justify-content: space-between; }
   .compact-next .btn { width: 100%; }
+  .application-preview-row { grid-template-columns: 1fr; gap: 4px; }
 }
 
 /* ============================================================
@@ -1406,6 +1407,11 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
 .compact-next { padding: 13px 16px; border-radius: 15px; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
 .compact-next .na-ic { width: 34px; height: 34px; border-radius: 10px; }
 .compact-next .btn { flex: none; }
+.application-review-card { max-width: 920px; margin: 0 auto; }
+.application-preview-list { display: grid; gap: 0; border-top: 1px solid var(--hairline); }
+.application-preview-row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 18px; padding: 13px 0; border-bottom: 1px solid var(--hairline); }
+.application-preview-row dt { color: var(--ink-3); font-size: 12px; font-weight: 700; }
+.application-preview-row dd { color: var(--ink-2); font-size: 13px; white-space: pre-wrap; line-height: 1.6; }
 
 /* ============================================================
    WHITE / NAVY / VIOLET THEME

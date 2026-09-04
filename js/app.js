@@ -309,6 +309,7 @@ const App = {
         case "stage": return founderStagePage(parts[2]);
         case "opportunities": return founderOpportunities();
         case "opportunity": return founderOpportunityDetail(parts[2]);
+        case "apply": return founderApplicationReview(parts[2]);
         case "applications": return founderApplications();
         case "application": return founderApplicationDetail(parts[2]);
         case "messaging": return messagingPage("founder", parts[2]);
@@ -643,9 +644,31 @@ const App = {
     }
     const exists = Store.applicationsForStartup(Store.founder().startupId).some(a => a.opportunityId === oppId);
     if (exists) { toast("You have already applied to this opportunity", "info", "info"); return; }
+    this.navigate("#/founder/apply/" + oppId);
+  },
+  submitApplication(oppId) {
+    const o = Store.getOpportunity(oppId);
+    if (!o || o.applicationMode === "external" || o.type === "hackathon") return;
+    const exists = Store.applicationsForStartup(Store.founder().startupId).some(a => a.opportunityId === oppId);
+    if (exists) { toast("You have already applied to this opportunity", "info", "info"); return; }
     const app = Store.createApplication(Store.founder().startupId, oppId);
-    toast("Application submitted — Venture Connect quality control has begun", "success", "send");
+    toast("Application submitted to Venture Connect", "success", "send");
     this.navigate("#/founder/application/" + app.id);
+  },
+  updateApplicationSnapshot(appId) {
+    const app = Store.getApplication(appId);
+    if (!app) return;
+    const result = Store.updateApplicationSnapshot(appId, Store.workspace());
+    if (!result) { toast("This application is locked for review", "error", "lock"); return; }
+    toast("Application updated — Venture Connect will review the latest version", "success", "checkCircle");
+    this.render();
+  },
+  respondClarification(appId) {
+    const response = val("clarification-response");
+    if (!response.trim()) { toast("Add a response before submitting", "error", "alert"); return; }
+    Store.respondClarification(appId, response.trim());
+    toast("Clarification submitted", "success", "send");
+    this.render();
   },
   confirmExternalApplication(oppId) {
     const o = Store.getOpportunity(oppId);
@@ -706,7 +729,7 @@ const App = {
   intRunChecks(appId) {
     const app = Store.getApplication(appId);
     const s = Store.getStartup(app.startupId);
-    const res = Store.runQualityChecks(workspaceLike(s));
+    const res = Store.runQualityChecks(workspaceLike(s, app));
     Store.updateApplication(appId, { autoCheck: { status: res.status, ranAt: new Date().toLocaleString() } });
     toast("Automated checks recorded: " + res.status, "success", "scan");
     this.render();
@@ -736,6 +759,12 @@ const App = {
       Store.updateApplication(appId, patch);
       toast("Escalated to manual review", "info", "users");
     }
+    this.render();
+  },
+  intRequestClarification(appId) {
+    const question = val("vc-notes") || "Please clarify the submitted information.";
+    Store.requestClarification(appId, question);
+    toast("Clarification requested — founder notified", "info", "message");
     this.render();
   },
   intPitchSave(appId, decision) {

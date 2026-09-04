@@ -139,6 +139,19 @@ function founderOpportunityDetail(id) {
     '</div>';
 }
 
+/* ---------------- FOUNDER APPLICATION REVIEW ---------------- */
+function founderApplicationReview(oppId) {
+  const o = Store.getOpportunity(oppId);
+  if (!o || o.applicationMode === "external" || o.type === "hackathon") return errorPage();
+  const w = Store.workspace();
+  const rows = WORKSPACE_SECTIONS.map(sec => '<div class="application-preview-row"><dt>' + sec.label + '</dt><dd>' + escapeHtml(w[sec.key] || "Not answered") + '</dd></div>').join("");
+  return '<div class="page-head"><div><a href="#/founder/opportunity/' + o.id + '" class="small semibold" style="color:var(--accent-deep)">' + Icon("chevL", 13) + ' Back to opportunity</a><h1 class="h1" style="margin-top:10px">Review your application</h1><p class="sub">Your Idea Workspace will be submitted to Venture Connect for review.</p></div><span class="badge badge-indigo">Version 1 · Draft</span></div>' +
+    '<div class="glass-strong card application-review-card"><div class="row-between" style="flex-wrap:wrap;gap:12px;margin-bottom:18px"><div><div class="tiny faint semibold">APPLICATION FOR</div><div class="h2">' + o.title + '</div><div class="small muted">' + o.org + ' · ' + (o.category || "Opportunity") + '</div></div><span class="badge badge-info">Venture Connect review</span></div>' +
+    '<div class="application-preview-list">' + rows + '</div>' +
+    '<div class="status-banner info" style="margin-top:18px"><span class="sb-ic">' + Icon("shield", 20) + '</span><div><b>Submit to Venture Connect</b><p>After submission, you will have 10 days to update this application. Venture Connect will then continue its review for up to 30 days.</p></div></div>' +
+    '<div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn btn-ghost" onclick="App.navigate(\'#/founder/opportunity/' + o.id + '\')">Cancel</button><button class="btn btn-primary btn-lg" onclick="App.submitApplication(\'' + o.id + '\')">' + Icon("send", 16) + 'Submit Application</button></div></div>';
+}
+
 /* ---------------- MESSAGING ---------------- */
 let activeConv = null;
 

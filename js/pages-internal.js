@@ -20,12 +20,17 @@ function internalDashboard() {
   const pitchPending = apps.filter(a => a.stage === 3 && !a.rejected);
   const interviews = apps.filter(a => a.stage === 4 && a.interview.scheduled && !a.rejected);
   const gated = apps.filter(a => a.gate && a.gate.decision === "passed");
+  const editing = apps.filter(a => Store.applicationLifecycle(a).editingAllowed);
+  const locked = apps.filter(a => !Store.applicationLifecycle(a).editingAllowed && !a.rejected && !(a.gate && a.gate.decision));
+  const targetReached = apps.filter(a => Store.applicationLifecycle(a).targetReached);
 
   const stats = [
     { label: "Applications in review", val: inReview.length, icon: "layers", tone: "" },
     { label: "Awaiting pitch review", val: pitchPending.length, icon: "present", tone: "violet" },
     { label: "Interviews scheduled", val: interviews.length, icon: "calendar", tone: "blue" },
-    { label: "Gate passed (cycle)", val: gated.length, icon: "trophy", tone: "green" }
+    { label: "Gate passed (cycle)", val: gated.length, icon: "trophy", tone: "green" },
+    { label: "Founder editing window", val: editing.length, icon: "edit", tone: "violet" },
+    { label: "Locked / target attention", val: locked.length + targetReached.length, icon: "alert", tone: "amber" }
   ];
 
   const inReviewRows = inReview.slice(0, 4).map(app => appRow(app)).join("");
@@ -113,6 +118,7 @@ function internalApplicationReview(id) {
   const opp = Store.getOpportunity(app.opportunityId);
   const appStatus = founderAppStatus(app);
   const stage = INTERNAL_STAGES[app.stage];
+  const lifecycle = Store.applicationLifecycle(app);
 
   // stage rail
   const rail = INTERNAL_STAGES.map((g, i) => {
@@ -125,7 +131,7 @@ function internalApplicationReview(id) {
   }).join("");
 
   // automated checks
-  const checksRes = Store.runQualityChecks(workspaceLike(s));
+  const checksRes = Store.runQualityChecks(workspaceLike(s, app));
   const checksRan = app.autoCheck && app.autoCheck.ranAt;
   const checksBanner = checksRan
     ? '<div class="status-banner ' + QC_STATUS_META[checksRes.status].tone + '" style="margin-bottom:14px"><span class="sb-ic">' + Icon(QC_STATUS_META[checksRes.status].icon, 20) + '</span><div><b>' + checksRes.status + '</b><p>Recorded ' + app.autoCheck.ranAt + '</p></div></div>'
@@ -184,11 +190,14 @@ function internalApplicationReview(id) {
         '<div style="text-align:right"><div class="tiny faint semibold" style="letter-spacing:.08em">CURRENT STAGE</div>' +
         '<div class="semibold" style="font-size:17px;color:var(--accent-deep)">' + stage.name + '</div>' +
         '<div class="tiny faint" style="margin-top:2px">Submitted ' + app.submitted + ' · Stage ' + (app.stage + 1) + '/' + INTERNAL_STAGES.length + '</div>' +
+        '<div class="tiny faint">Version ' + (app.currentVersion || 1) + ' · ' + Math.max(0, Math.floor((Date.now() - lifecycle.submittedAt.getTime()) / 86400000)) + ' days in review</div>' +
         '<div class="tiny faint">Founder status: <b style="color:var(--ink)">' + appStatus.label + '</b></div></div>' +
       '</div>' +
     '</div>' +
 
     '<div class="gate-timeline" style="margin-bottom:20px">' + rail + '</div>' +
+
+    '<div class="glass card" style="margin-bottom:18px"><div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("file", 17) + '</span>Application versions</div><span class="badge badge-indigo">Latest v' + (app.currentVersion || 1) + '</span></div><div class="col" style="gap:7px">' + (app.versions || []).map(v => '<div class="product-row"><div class="product-row-main"><b>Version ' + v.version + '</b><div class="tiny faint">' + new Date(v.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + ' · Updated by ' + v.updatedBy + '</div></div>' + (v.version === app.currentVersion ? '<span class="badge badge-success">Latest</span>' : '') + '</div>').join("") + '</div></div>' +
 
     '<div class="stack">' +
 
@@ -213,6 +222,7 @@ function internalApplicationReview(id) {
         '<div class="row-wrap">' +
           '<button class="btn btn-success" onclick="App.intVcDecision(\'' + app.id + '\', \'approved\')"' + (app.stage > 2 || app.rejected ? " disabled" : "") + '>' + Icon("checkCircle", 14) + 'Approve for next stage</button>' +
           '<button class="btn btn-ghost" onclick="App.intVcDecision(\'' + app.id + '\', \'revision\')"' + (app.rejected ? " disabled" : "") + '>' + Icon("refresh", 14) + 'Request Revision</button>' +
+          '<button class="btn btn-soft" onclick="App.intRequestClarification(\'' + app.id + '\')"' + (app.rejected ? " disabled" : "") + '>' + Icon("message", 14) + 'Request Clarification</button>' +
           '<button class="btn btn-danger" onclick="App.intVcDecision(\'' + app.id + '\', \'reject\')"' + (app.rejected ? " disabled" : "") + '>' + Icon("x", 14) + 'Reject</button>' +
           '<button class="btn btn-soft" onclick="App.intVcDecision(\'' + app.id + '\', \'manual\')"' + (app.rejected ? " disabled" : "") + '>' + Icon("users", 14) + 'Manual Review</button>' +
         '</div>' +
@@ -288,7 +298,8 @@ function internalApplicationReview(id) {
 }
 
 /* Build a workspace-like object from a startup for the check engine */
-function workspaceLike(s) {
+function workspaceLike(s, app) {
+  if (app && app.versions && app.versions.length) return app.versions[app.versions.length - 1].workspace;
   return {
     problem: s.problem, solution: s.solution, targetCustomer: s.targetCustomer,
     market: s.market, businessModel: s.businessModel, validation: s.validation,

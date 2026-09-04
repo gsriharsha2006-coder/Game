@@ -391,6 +391,16 @@ function founderApplicationDetail(id) {
   const opp = Store.getOpportunity(app.opportunityId);
   const st = founderAppStatus(app);
   const stage = INTERNAL_STAGES[app.stage];
+  const lifecycle = Store.applicationLifecycle(app);
+  const lifecycleStatus = Store.applicationStatus(app);
+  const snapshot = app.versions && app.versions.length ? app.versions[app.versions.length - 1].workspace : Store.workspace();
+  const lifecycleNotice = lifecycle.editingAllowed
+    ? '<div class="status-banner info" style="margin-top:16px"><span class="sb-ic">' + Icon("edit", 20) + '</span><div style="flex:1"><b>Editing window open</b><p>Update your application until ' + lifecycle.editingDeadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '. ' + lifecycle.daysEditing + ' day' + (lifecycle.daysEditing === 1 ? '' : 's') + ' remaining.</p></div><button class="btn btn-primary btn-sm" onclick="App.updateApplicationSnapshot(\'' + app.id + '\')">Save Latest Workspace</button></div>'
+    : '<div class="status-banner ' + (lifecycle.targetReached ? "warning" : "success") + '" style="margin-top:16px"><span class="sb-ic">' + Icon("lock", 20) + '</span><div><b>Application locked</b><p>Your editing window has ended. Venture Connect is continuing its review.' + (lifecycle.targetReached ? ' Review target reached.' : '') + '</p></div></div>';
+  const clarification = app.clarification && app.clarification.status === "requested"
+    ? '<div class="status-banner warning" style="margin-top:16px"><span class="sb-ic">' + Icon("message", 20) + '</span><div style="flex:1"><b>Action required</b><p>Venture Connect has requested additional information.</p><p style="margin-top:7px"><b>Reviewer question:</b> ' + escapeHtml(app.clarification.question) + '</p><textarea class="textarea" id="clarification-response" placeholder="Write your response" style="margin-top:10px;min-height:90px"></textarea><button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="App.respondClarification(\'' + app.id + '\')">' + Icon("send", 13) + 'Respond</button></div></div>'
+    : '';
+  const submittedWorkspace = app.versions && app.versions.length ? app.versions[app.versions.length - 1].workspace : null;
 
   const feedback = [
     app.vcReview && app.vcReview.notes ? ["Venture Connect review", app.vcReview.notes, "violet"] : null,
@@ -410,13 +420,16 @@ function founderApplicationDetail(id) {
         '<div class="row" style="gap:15px">' + startupLogo(s, 48) +
           '<div><div style="font-size:18px;font-weight:800">' + (opp ? opp.title : "Application") + '</div>' +
           '<div class="small muted" style="margin-top:3px">' + (opp ? opp.org : "") + ' · ' + s.name + ' · ' + s.sector + '</div>' +
-          '<div class="small muted">Submitted: ' + app.submitted + ' · Last update ' + app.lastUpdate + '</div></div>' +
+          '<div class="small muted">Submitted: ' + app.submitted + ' · Last update ' + app.lastUpdate + ' · Version ' + (app.currentVersion || 1) + '</div></div>' +
         '</div>' +
         '<div style="text-align:right"><div class="tiny faint semibold" style="letter-spacing:.08em">CURRENT STAGE</div>' +
         '<div class="semibold" style="font-size:16px;color:var(--accent-deep)">' + stage.name + '</div>' +
         '<div class="tiny faint" style="margin-top:2px">Stage ' + (app.stage + 1) + ' of ' + INTERNAL_STAGES.length + '</div></div>' +
       '</div>' +
-    '</div>' +
+    '</div>' + lifecycleNotice + clarification +
+
+    '<div class="glass card application-lifecycle-card" style="margin-bottom:18px"><div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("calendar", 17) + '</span>Application timeline</div><span class="badge badge-indigo">' + lifecycleStatus + '</span></div><div class="kv"><dt>Editing until</dt><dd>' + lifecycle.editingDeadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '</dd><dt>Review target</dt><dd>' + lifecycle.reviewTarget.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + '</dd><dt>Days in review</dt><dd>' + Math.max(0, Math.floor((Date.now() - lifecycle.submittedAt.getTime()) / 86400000)) + '</dd><dt>Current version</dt><dd>' + (app.currentVersion || 1) + '</dd></div></div>' +
+    (submittedWorkspace ? '<div class="glass card" style="margin-bottom:18px"><div class="card-header"><div class="h3"><span class="card-title-ic">' + Icon("file", 17) + '</span>Submitted application</div><span class="tiny faint">Version ' + (app.currentVersion || 1) + '</span></div><div class="application-preview-list">' + WORKSPACE_SECTIONS.slice(0, 8).map(sec => '<div class="application-preview-row"><dt>' + sec.label + '</dt><dd>' + escapeHtml(submittedWorkspace[sec.key] || "Not answered") + '</dd></div>').join("") + '</div></div>' : '') +
 
     '<div class="glass card" style="padding:18px 20px;margin-bottom:18px">' +
       '<div class="h3" style="font-size:14px;margin-bottom:10px"><span class="card-title-ic" style="width:28px;height:28px">' + Icon("layers", 14) + '</span>Application progress</div>' +
@@ -438,7 +451,7 @@ function founderApplicationDetail(id) {
             : '<div class="row" style="margin-top:16px">';
         })() +
           (opp ? '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/opportunity/' + opp.id + '\')">' + Icon("eye", 13) + 'View Opportunity</button>' : '') +
-          '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/workspace\')">' + Icon("edit", 13) + 'Edit Workspace</button>' +
+          (lifecycle.editingAllowed ? '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/workspace\')">' + Icon("edit", 13) + 'Edit Application</button>' : '<button class="btn btn-ghost btn-sm" disabled>' + Icon("lock", 13) + 'View Application</button>') +
         '</div>' +
       '</div>' +
       '<div class="glass card">' +

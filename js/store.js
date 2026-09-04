@@ -78,6 +78,24 @@ const Store = (() => {
       o.applicationMode = "internal";
     }
   });
+  state.applications = (state.applications || []).map(app => {
+    if (!app.submittedAt) {
+      const parsed = new Date(app.submitted || Date.now());
+      app.submittedAt = isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+    }
+    if (!app.createdAt) app.createdAt = app.submittedAt;
+    if (!app.lastUpdatedAt) app.lastUpdatedAt = app.submittedAt;
+    if (!app.currentVersion) app.currentVersion = 1;
+    if (!app.versions) {
+      const startup = STARTUPS.find(s => s.id === app.startupId);
+      app.versions = [{ version: 1, submittedAt: app.submittedAt, updatedAt: app.submittedAt, updatedBy: "founder", workspace: startup ? {
+        problem: startup.problem, solution: startup.solution, targetCustomer: startup.targetCustomer, market: startup.market,
+        businessModel: startup.businessModel, validation: startup.validation, competition: startup.competition,
+        advantage: startup.advantage, funding: startup.fundingAsk, useOfFunds: startup.useOfFunds
+      } : {} }];
+    }
+    return app;
+  });
 
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
@@ -446,12 +464,50 @@ const Store = (() => {
   const oppQualifiedCount = (id) => state.applications.filter(a => a.opportunityId === id && a.gate && a.gate.decision === "passed" && a.stage >= 7).length;
   const oppInterestedCount = (id) => state.applications.filter(a => a.opportunityId === id && state.interested.includes(a.startupId)).length;
 
+  const workspaceSnapshot = (startupId) => {
+    const s = getStartup(startupId);
+    if (s && s.id === state.founder.startupId) return JSON.parse(JSON.stringify(state.founder.workspace));
+    return s ? JSON.parse(JSON.stringify(workspaceLikeStartup(s))) : {};
+  };
+  const workspaceLikeStartup = (s) => ({
+    problem: s.problem, solution: s.solution, targetCustomer: s.targetCustomer,
+    market: s.market, businessModel: s.businessModel, validation: s.validation,
+    competition: s.competition, advantage: s.advantage, funding: s.fundingAsk, useOfFunds: s.useOfFunds
+  });
+  const daysFrom = (iso, days) => new Date(new Date(iso).getTime() + days * 86400000);
+  const applicationLifecycle = (app, now) => {
+    const submittedAt = new Date(app.submittedAt || app.createdAt || Date.now());
+    const current = now ? new Date(now) : new Date();
+    const editingDeadline = daysFrom(submittedAt, 10);
+    const reviewTarget = daysFrom(submittedAt, 30);
+    const editingAllowed = current < editingDeadline && !app.rejected && !(app.gate && app.gate.decision);
+    const targetReached = current >= reviewTarget && !(app.gate && app.gate.decision) && !app.rejected;
+    const daysEditing = Math.max(0, Math.ceil((editingDeadline - current) / 86400000));
+    const daysRemaining = Math.max(0, Math.ceil((reviewTarget - current) / 86400000));
+    return { submittedAt, editingDeadline, reviewTarget, editingAllowed, targetReached, daysEditing, daysRemaining };
+  };
+  const applicationStatus = (app, now) => {
+    const life = applicationLifecycle(app, now);
+    if (app.rejected || (app.gate && app.gate.decision === "not-passed")) return "Not Approved";
+    if (app.gate && app.gate.decision === "passed" && app.stage >= 7) return "Approved for Organization Review";
+    if (app.clarification && app.clarification.status === "requested") return "Clarification Requested";
+    if (life.editingAllowed) return app.versions && app.versions.length > 1 ? "Updated — Under Review" : "Editing Window Open";
+    if (life.targetReached) return "Review Target Reached";
+    return "Under Venture Connect Review";
+  };
+
   function freshApplication(startupId, opportunityId) {
+    const submittedAt = new Date().toISOString();
+    const snapshot = workspaceSnapshot(startupId);
     return {
       id: "app-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       startupId, opportunityId,
-      submitted: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      submitted: new Date(submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      submittedAt, createdAt: submittedAt, lastUpdatedAt: submittedAt, updatedBy: "founder",
       lastUpdate: "Just now",
+      versions: [{ version: 1, submittedAt, updatedAt: submittedAt, updatedBy: "founder", workspace: snapshot }],
+      currentVersion: 1,
+      clarification: null,
       stage: 1,
       needsRevision: false,
       rejected: false,
@@ -467,6 +523,31 @@ const Store = (() => {
     state.applications.unshift(app);
     save();
     return app;
+  };
+  const updateApplicationSnapshot = (id, workspace, updatedBy) => {
+    const a = state.applications.find(x => x.id === id);
+    if (!a || !applicationLifecycle(a).editingAllowed) return null;
+    const now = new Date().toISOString();
+    const version = (a.currentVersion || 1) + 1;
+    a.versions = (a.versions || []).concat({ version, submittedAt: a.submittedAt, updatedAt: now, updatedBy: updatedBy || "founder", workspace: JSON.parse(JSON.stringify(workspace || {})) });
+    a.currentVersion = version;
+    a.lastUpdatedAt = now;
+    a.lastUpdate = "Just now";
+    a.updatedBy = updatedBy || "founder";
+    save();
+    return a;
+  };
+  const requestClarification = (id, question) => updateApplication(id, { clarification: { status: "requested", question: question || "Please clarify the submitted information.", response: "", requestedAt: new Date().toISOString() }, needsRevision: false });
+  const respondClarification = (id, response) => {
+    const a = state.applications.find(x => x.id === id);
+    if (!a || !a.clarification || a.clarification.status !== "requested") return null;
+    a.clarification.response = response;
+    a.clarification.respondedAt = new Date().toISOString();
+    a.clarification.status = "responded";
+    a.lastUpdatedAt = new Date().toISOString();
+    a.lastUpdate = "Just now";
+    save();
+    return a;
   };
   const updateApplication = (id, patch) => {
     const a = state.applications.find(x => x.id === id);
@@ -541,6 +622,6 @@ const Store = (() => {
     createOpportunity, updateOpportunity, closeOpportunity, reopenOpportunity, incrementViews, recordExternalApplicationClick, externalApplicationsForStartup,
     getApplications, getApplication, applicationsForStartup, applicationsForOrg,
     oppApplicationCount, oppQualifiedCount, oppInterestedCount,
-    createApplication, updateApplication, advanceApp, setGate, unlockApp, rejectApp
+    createApplication, updateApplication, updateApplicationSnapshot, applicationLifecycle, applicationStatus, requestClarification, respondClarification, advanceApp, setGate, unlockApp, rejectApp
   };
 })();
