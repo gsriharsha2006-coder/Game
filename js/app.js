@@ -197,13 +197,17 @@ const App = {
     let name = d.fullName || d.org;
     let profile = null;
     if (authRole === "founder") {
-      const startup = Store.addUserStartup({ name: d.startupName, description: d.description, industry: d.industry, stage: d.stage, location: d.location || "India", founderName: d.fullName, college: d.college, bio: d.bio });
+      const startup = Store.addUserStartup({
+        name: d.startupName,
+        description: "A " + (d.stage || "student") + " startup in " + (d.industry || "tech") + ". Details live in the Idea Workspace.",
+        industry: d.industry, stage: d.stage, location: "",
+        founderName: d.fullName, college: d.college, bio: ""
+      });
       const f = Store.founder();
       Object.assign(f, {
-        name: d.fullName, email: d.email, phone: d.phone, college: d.college, degree: d.degree, branch: d.branch, gradYear: d.gradYear,
-        founderType: d.founderType, location: d.location, bio: d.bio, teamSize: d.teamSize,
-        skills: (d.skills || "").split(",").map(x => x.trim()).filter(Boolean),
-        socials: { linkedin: d.linkedin, twitter: d.website, github: d.otherLinks },
+        name: d.fullName, email: d.email, college: d.college, gradYear: d.gradYear,
+        location: "", bio: "", skills: [], teamSize: "", founderType: "",
+        socials: { linkedin: "", twitter: "", github: "" },
         startupId: startup.id, workspace: {}
       });
       Store.save();
@@ -211,27 +215,25 @@ const App = {
     } else if (authRole === "investor") {
       const inv = Store.investor();
       Object.assign(inv, {
-        name: d.fullName, email: d.email, phone: d.phone, org: d.org, role: d.role, website: d.website, location: d.location,
-        sectors: d.sectors || [], stages: d.stages || [], ticket: d.ticket, geography: d.geography,
-        focus: d.thesis, thesis: d.thesis, linkedin: d.linkedin,
-        portfolio: (d.portfolio || "").split(",").map(x => x.trim()).filter(Boolean), prevInvestments: d.prevInvestments
+        name: d.fullName, email: d.email, org: d.org, sectors: d.sectors || [], stages: d.stages || [],
+        role: "", website: "", location: "", ticket: "", geography: "",
+        focus: "", thesis: "", linkedin: "", portfolio: [], prevInvestments: ""
       });
       Store.save();
       profile = JSON.parse(JSON.stringify(inv));
     } else if (authRole === "incubator") {
       const inc = Store.incubator();
       Object.assign(inc, {
-        name: d.fullName, email: d.email, phone: d.phone, org: d.org, orgType: d.orgType, website: d.website, location: d.location,
-        sectors: d.sectors || [], stages: d.stages || [], support: d.support || [],
-        duration: d.duration, funding: d.funding, equity: d.equity, description: d.description
+        name: d.fullName, email: d.email, org: d.org, sectors: d.sectors || [], stages: d.stages || [],
+        orgType: "", website: "", location: "", support: [], duration: "", funding: "", equity: "", description: ""
       });
       Store.save();
       profile = JSON.parse(JSON.stringify(inc));
     } else {
       const orgP = Store.organizer();
       Object.assign(orgP, {
-        name: d.fullName || "", email: d.email, phone: d.phone, org: d.org, orgType: d.orgType,
-        website: d.website, location: d.location, about: d.about, domains: d.domains || []
+        name: d.fullName || "", email: d.email, org: d.org, orgType: d.orgType || "", domains: d.domains || [],
+        website: "", location: "", about: "", phone: ""
       });
       Store.save();
       profile = JSON.parse(JSON.stringify(orgP));

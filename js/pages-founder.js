@@ -54,6 +54,26 @@ function statusStrip(app) {
 }
 
 /* ---------------- DASHBOARD ---------------- */
+function founderProfilePct(f) {
+  const fields = [
+    (f.bio || "").trim(),
+    (f.location || "").trim(),
+    (f.skills && f.skills.length ? "y" : ""),
+    (f.socials && (f.socials.linkedin || f.socials.twitter || f.socials.github) ? "y" : "")
+  ];
+  const filled = fields.filter(Boolean).length;
+  return Math.min(100, Math.round((filled / fields.length) * 50 + (Store.workspaceCompletion() / 100) * 50));
+}
+
+function profileBanner(pct, ctaRoute, ctaLabel, text) {
+  return '<div class="profile-banner">' +
+    '<div style="flex:1;min-width:200px"><div class="small semibold">Profile ' + pct + '% complete</div>' +
+    '<div class="tiny faint" style="margin-top:2px">' + text + '</div></div>' +
+    '<div class="row" style="gap:10px;align-items:center">' + bar(pct, "thin") +
+    '<button class="btn btn-soft btn-sm" onclick="App.navigate(\'' + ctaRoute + '\')">' + ctaLabel + '</button></div>' +
+  '</div>';
+}
+
 function founderDashboard() {
   const f = Store.founder();
   const s = Store.myStartup();
@@ -61,134 +81,144 @@ function founderDashboard() {
   const app = myTopApp();
   const appStatus = founderAppStatus(app);
   const opp = app ? Store.getOpportunity(app.opportunityId) : null;
-  const opps = Store.getOpportunities().filter(o => o.status === "published").slice(0, 3);
-
-  const wsFields = WORKSPACE_SECTIONS.map(sec => {
-    const ok = sectionOk((f.workspace[sec.key] || "").trim().length);
-    return '<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--hairline)">' +
-      '<span class="small" style="color:' + (ok ? "var(--ink-2)" : "var(--ink-3)") + '">' + sec.label + '</span>' +
-      (ok ? '<span class="badge badge-success" style="padding:2px 8px">' + Icon("check", 11) + '</span>'
-          : '<span class="badge badge-neutral" style="padding:2px 8px">' + Icon("alert", 11) + ' pending</span>') +
-    '</div>';
-  }).join("");
-
-  const readinessDims = [
-    { k: "problem", label: "Problem clarity" },
-    { k: "market", label: "Market" },
-    { k: "solution", label: "Solution" },
-    { k: "validation", label: "Validation" },
-    { k: "businessModel", label: "Business model" },
-    { k: "team", label: "Team" }
-  ];
   const fr = (f.workspace.funding && f.workspace.useOfFunds) ? 78 : 42;
-  const dimBars = readinessDims.map(d =>
-    '<div style="margin-bottom:10px"><div class="row-between"><span class="small semibold">' + d.label + '</span><span class="small mono bold" style="color:var(--accent-deep)">' + s.scoreBreak[d.k] + '</span></div>' +
-    bar(s.scoreBreak[d.k], "thin") + '</div>'
-  ).join("") +
-  '<div style="margin-bottom:6px"><div class="row-between"><span class="small semibold">Funding readiness</span><span class="small mono bold" style="color:var(--accent-deep)">' + fr + '</span></div>' + bar(fr, "thin") + '</div>';
+  const allApps = Store.applicationsForStartup(Store.founder().startupId);
+  const na = founderNextAction(f, s, app, completion);
 
-  const oppCards = opps.map(o =>
-    '<div class="glass glass-hover" style="padding:15px 16px;border-radius:16px;cursor:pointer" onclick="App.navigate(\'#/founder/opportunity/' + o.id + '\')">' +
-      '<div class="row-between" style="margin-bottom:6px"><span class="tag">' + o.category + '</span><span class="tiny faint">' + Icon("clock", 11) + ' ' + o.deadline + '</span></div>' +
+  // Recommended opportunities — sector match first
+  const published = Store.getOpportunities().filter(o => o.status === "published");
+  const matched = published.filter(o => o.sector === s.sector);
+  const recOpps = (matched.length ? matched : published).slice(0, 3);
+
+  const oppCards = recOpps.map(o =>
+    '<div class="glass glass-hover" style="padding:14px 15px;border-radius:15px;cursor:pointer" onclick="App.navigate(\'#/founder/opportunity/' + o.id + '\')">' +
+      '<div class="row-between" style="margin-bottom:5px"><span class="tag">' + o.category + '</span><span class="tiny faint">' + Icon("clock", 11) + ' ' + o.deadline + '</span></div>' +
       '<div class="semibold" style="font-size:13.5px;line-height:1.35">' + o.title + '</div>' +
-      '<div class="tiny faint" style="margin-top:4px">' + o.org + ' · ' + (o.funding || "") + '</div>' +
+      '<div class="tiny faint" style="margin-top:4px">' + o.org + (o.funding ? ' · ' + o.funding : '') + '</div>' +
     '</div>'
   ).join("");
 
-  const appCard = app
-    ? '<div class="app-status-row" style="margin-top:12px">' +
-        '<div class="asr-main"><div class="semibold" style="font-size:13.5px">' + (opp ? opp.title : "Application") + '</div>' +
-        '<div class="tiny faint">' + (opp ? opp.org : "") + ' · Submitted: ' + app.submitted + '</div></div>' +
-        '<span class="badge ' + (appStatus.tone === "success" ? "badge-success" : appStatus.tone === "warning" ? "badge-warning" : appStatus.tone === "danger" ? "badge-danger" : "badge-indigo") + '">' + appStatus.label + '</span>' +
-      '</div>' +
-      (function () {
-        const nx = appNextStep(app);
-        return nx
-          ? '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap">' +
-              '<div class="small muted" style="flex:1;min-width:180px">' + Icon("arrowR", 13) + ' Next: ' + nx.text + '</div>' +
-              (nx.cta ? '<button class="btn btn-soft btn-sm" onclick="App.navigate(\'' + nx.route + '\')">' + nx.cta + '</button>' : '') +
-            '</div>'
-          : '';
-      })() +
-      '<button class="btn btn-soft btn-block" style="margin-top:12px" onclick="App.navigate(\'#/founder/applications\')">' + Icon("layers", 15) + 'View Applications</button>'
-    : '<p class="muted small" style="margin:10px 0">You have not applied to any opportunity yet. Browse the marketplace and submit your first application.</p>' +
-      '<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="App.navigate(\'#/founder/opportunities\')">' + Icon("briefcase", 15) + 'Explore Opportunities</button>';
+  const appRows = allApps.slice(0, 2).map(a => {
+    const st = founderAppStatus(a);
+    const o = Store.getOpportunity(a.opportunityId);
+    return '<div class="app-status-row" style="cursor:pointer" onclick="App.navigate(\'#/founder/application/' + a.id + '\')">' +
+      '<div class="asr-main"><div class="semibold" style="font-size:13.5px">' + (o ? o.title : "Application") + '</div>' +
+      '<div class="tiny faint">' + (o ? o.org + ' · ' : '') + 'Submitted: ' + a.submitted + '</div></div>' +
+      '<span class="badge ' + (st.tone === "success" ? "badge-success" : st.tone === "warning" ? "badge-warning" : st.tone === "danger" ? "badge-danger" : "badge-indigo") + '">' + st.label + '</span>' +
+    '</div>';
+  }).join("");
+
+  const wsPending = WORKSPACE_SECTIONS.filter(sec => !sectionOk((f.workspace[sec.key] || "").trim().length));
+  const wsList = (wsPending.length ? wsPending : WORKSPACE_SECTIONS).slice(0, 4).map(sec =>
+    '<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--hairline)">' +
+      '<span class="small" style="color:var(--ink-2)">' + sec.label + '</span>' +
+      (wsPending.length
+        ? '<span class="badge badge-neutral" style="padding:2px 8px">' + Icon("circle", 10) + ' pending</span>'
+        : '<span class="badge badge-success" style="padding:2px 8px">' + Icon("check", 11) + ' done</span>') +
+    '</div>'
+  ).join("");
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">' + greeting() + ', Founder</h1><p class="sub">Build your idea, apply to the right opportunities, and track your applications.</p></div>' +
-      '<div class="autosave saved"><span class="as-dot"></span>Workspace synced</div>' +
+      '<div><h1 class="h1">Dashboard</h1><p class="sub">Your startup, your applications, and what needs your attention today.</p></div>' +
     '</div>' +
 
-    '<div class="glass-strong card" style="padding:24px;margin-bottom:20px">' +
+    (founderProfilePct(f) < 100 ? profileBanner(founderProfilePct(f), "#/founder/profile", "Complete Profile", "Complete your profile to improve opportunity matching.") : '') +
+
+    /* MAIN: one clear next action */
+    '<div class="next-action ' + na.tone + '">' +
+      '<span class="na-ic">' + Icon(na.icon, 21) + '</span>' +
+      '<div style="flex:1;min-width:220px">' +
+        '<div class="tiny faint semibold" style="letter-spacing:.1em">NEXT ACTION</div>' +
+        '<div class="semibold" style="font-size:16.5px;margin-top:3px">' + na.title + '</div>' +
+        '<div class="small muted" style="margin-top:4px;max-width:540px;line-height:1.6">' + na.desc + '</div>' +
+      '</div>' +
+      '<button class="btn btn-primary" onclick="App.navigate(\'' + na.route + '\')">' + Icon("arrowR", 15) + na.cta + '</button>' +
+    '</div>' +
+
+    /* TOP: current startup */
+    '<div class="glass-strong card" style="padding:22px;margin-bottom:20px">' +
       '<div class="row-between" style="flex-wrap:wrap;gap:14px">' +
-        '<div class="row" style="gap:16px">' + startupLogo(s, 52) +
-          '<div><div class="small faint semibold">' + Icon("briefcase", 12) + ' STARTUP</div>' +
-          '<div style="font-size:21px;font-weight:800;letter-spacing:-0.02em">' + s.name + '</div>' +
-          '<div class="small muted" style="margin-top:2px">' + s.tagline + ' · ' + s.sector + '</div></div>' +
+        '<div class="row" style="gap:16px">' + startupLogo(s, 48) +
+          '<div>' +
+            '<div class="small faint semibold">' + Icon("briefcase", 12) + ' CURRENT STARTUP</div>' +
+            '<div style="font-size:19px;font-weight:800;letter-spacing:-0.02em">' + s.name + '</div>' +
+            '<div class="small muted" style="margin-top:2px">' + s.tagline + '</div>' +
+            '<div class="row-wrap" style="margin-top:7px"><span class="tag">' + s.sector + '</span><span class="tag">' + Icon("layers", 11) + ' ' + (s.stage || "Idea Stage") + '</span></div>' +
+          '</div>' +
         '</div>' +
-        '<div style="text-align:right;max-width:320px">' +
+        '<div style="text-align:right;max-width:300px">' +
           '<div class="tiny faint semibold" style="letter-spacing:.08em">LATEST APPLICATION</div>' +
           (app
-            ? '<div class="semibold" style="font-size:14px;margin-top:3px">' + (opp ? opp.title : "—") + '</div>' +
-              '<span class="badge ' + (appStatus.tone === "success" ? "badge-success" : appStatus.tone === "warning" ? "badge-warning" : appStatus.tone === "danger" ? "badge-danger" : "badge-indigo") + '" style="margin-top:6px;font-size:12.5px;padding:6px 13px">' + (appStatus.tone === "success" ? Icon("check", 12) : Icon("clock", 12)) + ' ' + appStatus.label + '</span>' +
+            ? '<div class="semibold" style="font-size:13.5px;margin-top:3px">' + (opp ? opp.title : "—") + '</div>' +
+              '<span class="badge ' + (appStatus.tone === "success" ? "badge-success" : appStatus.tone === "warning" ? "badge-warning" : appStatus.tone === "danger" ? "badge-danger" : "badge-indigo") + '" style="margin-top:6px;font-size:12.5px;padding:6px 13px">' + Icon("clock", 12) + ' ' + appStatus.label + '</span>' +
               '<div class="tiny faint" style="margin-top:7px">Last update: ' + app.lastUpdate + '</div>'
             : '<div class="muted small" style="margin-top:4px">No applications yet</div>') +
         '</div>' +
       '</div>' +
     '</div>' +
 
-    (!app && completion < 30 ? '<div class="onboard-banner">' +
-      '<span class="ob-ic">' + Icon("spark", 22) + '</span>' +
-      '<div style="flex:1;min-width:220px"><div class="semibold" style="font-size:16px">Welcome to Venture Connect</div>' +
-      '<div class="small muted" style="margin-top:3px">Two quick steps: complete your profile, then start building your idea.</div></div>' +
-      '<div class="row" style="flex-wrap:wrap">' +
-        '<button class="btn btn-primary" onclick="App.navigate(\'#/founder/workspace\')">' + Icon("edit", 15) + 'Open Idea Workspace</button>' +
-        '<button class="btn btn-ghost" onclick="App.navigate(\'#/founder/profile\')">' + Icon("user", 15) + 'Complete Profile</button>' +
+    '<div class="grid-2" style="margin-bottom:20px">' +
+      '<div class="glass card">' +
+        '<div class="card-header"><div class="h3"><span class="card-title-ic blue">' + Icon("briefcase", 17) + '</span>Recommended opportunities</div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/opportunities\')">Browse all</button></div>' +
+        (recOpps.length
+          ? '<div class="stack">' + oppCards + '</div>'
+          : emptyState("briefcase", "No opportunities yet", "Opportunities posted by investors and incubators will appear here.")) +
       '</div>' +
-    '</div>' : '') +
-
-    (app ? '<div class="glass card" style="padding:18px 20px;margin-bottom:20px">' +
-      '<div class="row-between" style="margin-bottom:10px"><div class="h3" style="font-size:14.5px"><span class="card-title-ic" style="width:28px;height:28px">' + Icon("layers", 14) + '</span>Application progress</div>' +
-      '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/applications\')">View all</button></div>' +
-      statusStrip(app) +
-    '</div>' : '') +
+      '<div class="glass card">' +
+        '<div class="card-header"><div class="h3"><span class="card-title-ic green">' + Icon("send", 17) + '</span>Recent applications</div>' +
+        (allApps.length ? '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/applications\')">View all</button>' : '') + '</div>' +
+        (allApps.length
+          ? '<div class="stack">' + appRows + '</div>'
+          : emptyState("send", "No applications yet", "Applications you submit to opportunities will appear here.", '<button class="btn btn-primary" style="margin-top:8px" onclick="App.navigate(\'#/founder/opportunities\')">' + Icon("briefcase", 15) + 'Explore Opportunities</button>')) +
+      '</div>' +
+    '</div>' +
 
     '<div class="grid-2">' +
-
-      '<div class="glass card glass-hover">' +
+      '<div class="glass card">' +
         '<div class="card-header"><div class="h3"><span class="card-title-ic">' + Icon("edit", 17) + '</span>Idea Workspace</div>' +
         '<span class="badge badge-indigo">' + completion + '% complete</span></div>' +
         bar(completion) +
-        '<div style="margin-top:14px">' + wsFields + '</div>' +
-        '<button class="btn btn-primary btn-block" style="margin-top:16px" onclick="App.navigate(\'#/founder/workspace\')">' + Icon("arrowR", 15) + 'Continue Workspace</button>' +
+        '<div style="margin-top:14px">' + wsList + '</div>' +
+        '<button class="btn btn-primary btn-block" style="margin-top:16px" onclick="App.navigate(\'#/founder/workspace\')">' + Icon("arrowR", 15) + (wsPending.length ? 'Continue Workspace' : 'Review Workspace') + '</button>' +
       '</div>' +
-
-      '<div class="glass card glass-hover">' +
+      '<div class="glass card">' +
         '<div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("trending", 17) + '</span>VC Readiness</div>' +
         '<span class="score-chip">' + s.score + '/100</span></div>' +
-        '<div class="row" style="gap:20px;align-items:center">' +
-          Ring(s.score, 92, "readiness") +
-          '<div style="flex:1;min-width:0">' + dimBars + '</div>' +
+        '<div class="row" style="gap:18px;align-items:center">' +
+          Ring(s.score, 84, "readiness") +
+          '<div style="flex:1;min-width:0">' +
+            '<div class="small muted" style="line-height:1.6;margin-bottom:10px">' + (s.score >= 75 ? "Strong overall — investors will see a credible early-stage profile." : s.score >= 55 ? "Solid foundation — completing your workspace will lift this score." : "Early stage — keep building out your workspace to improve readiness.") + '</div>' +
+            '<div class="small semibold" style="margin-bottom:4px">Funding readiness</div>' + bar(fr, "thin") +
+          '</div>' +
         '</div>' +
-        '<button class="btn btn-soft btn-block" style="margin-top:16px" onclick="App.navigate(\'#/founder/readiness\')">' + Icon("file", 15) + 'View Report</button>' +
-      '</div>' +
-
-      '<div class="glass card glass-hover">' +
-        '<div class="card-header"><div class="h3"><span class="card-title-ic blue">' + Icon("briefcase", 17) + '</span>Opportunities</div>' +
-        '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/opportunities\')">Browse all</button></div>' +
-        '<div class="stack">' + oppCards + '</div>' +
-      '</div>' +
-
-      '<div class="glass card glass-hover">' +
-        '<div class="card-header"><div class="h3"><span class="card-title-ic green">' + Icon("send", 17) + '</span>Applications</div>' +
-        (app ? '<span class="badge badge-indigo">' + app.submitted + '</span>' : '<span class="badge badge-neutral">None yet</span>') + '</div>' +
-        '<p class="muted small" style="line-height:1.6">Every application is reviewed by Venture Connect before it reaches the investor or incubator. You will always see a clear, simple status.</p>' +
-        appCard +
+        '<button class="btn btn-soft btn-block" style="margin-top:14px" onclick="App.navigate(\'#/founder/readiness\')">' + Icon("file", 15) + 'View Report</button>' +
       '</div>' +
     '</div>';
 
   return html;
+}
+
+/* Prioritized next action for the founder dashboard */
+function founderNextAction(f, s, app, completion) {
+  if (!s) return { icon: "spark", tone: "violet", title: "Create your startup", desc: "Set up your founder profile to start building.", cta: "Complete Profile", route: "#/founder/profile" };
+  const firstMissing = WORKSPACE_SECTIONS.find(sec => !sectionOk((f.workspace[sec.key] || "").trim().length));
+  if (completion < 30 && !app) {
+    return { icon: "spark", tone: "violet", title: "Start building your idea", desc: "Complete your profile, then open the Idea Workspace to build your startup step by step.", cta: "Open Idea Workspace", route: "#/founder/workspace" };
+  }
+  if (firstMissing) {
+    return { icon: "edit", tone: "indigo", title: "Continue your Idea Workspace", desc: "Complete the " + firstMissing.label + " section to strengthen your startup — " + completion + "% of the workspace is done.", cta: "Continue Workspace", route: "#/founder/workspace" };
+  }
+  if (!app) {
+    const matches = Store.getOpportunities().filter(o => o.status === "published" && o.sector === s.sector).length;
+    return { icon: "briefcase", tone: "green", title: "Apply to matching opportunities", desc: matches ? matches + " open opportunity" + (matches === 1 ? "" : "ies") + " match your " + s.sector + " startup." : "Your workspace is complete. Browse the marketplace to find your first opportunity.", cta: "Explore Opportunities", route: "#/founder/opportunities" };
+  }
+  if (app.needsRevision) {
+    return { icon: "alert", tone: "amber", title: "Your application needs revision", desc: "Venture Connect requested changes. Review the feedback, update your workspace, and re-submit.", cta: "Review Feedback", route: "#/founder/application/" + app.id };
+  }
+  const nx = appNextStep(app);
+  return { icon: "shield", tone: "blue", title: founderAppStatus(app).label, desc: nx ? nx.text : "Your application is being processed by Venture Connect.", cta: "View Application Status", route: "#/founder/application/" + app.id };
 }
 
 /* ---------------- IDEA WORKSPACE ---------------- */

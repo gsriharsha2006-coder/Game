@@ -42,6 +42,21 @@ function startupCard(s, opts) {
 }
 
 /* ---------------- DASHBOARD ---------------- */
+function orgProfilePct() {
+  const role = Store.getRole();
+  const p = Store.me();
+  if (role === "investor") {
+    const fields = [p.role, p.website, p.location, p.ticket, p.geography, p.thesis || p.focus, p.linkedin, (p.portfolio && p.portfolio.length) ? "y" : ""];
+    return Math.min(100, Math.round(fields.filter(Boolean).length / fields.length * 100));
+  }
+  if (role === "incubator") {
+    const fields = [p.orgType, p.website, p.location, (p.support && p.support.length) ? "y" : "", p.duration, p.funding, p.equity, p.description];
+    return Math.min(100, Math.round(fields.filter(Boolean).length / fields.length * 100));
+  }
+  const fields = [p.website, p.location, p.about, p.phone];
+  return Math.min(100, Math.round(fields.filter(Boolean).length / fields.length * 100));
+}
+
 function investorDashboard() {
   const inv = Store.investor();
   const org = inv.org;
@@ -80,10 +95,12 @@ function investorDashboard() {
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">' + greeting() + ', ' + inv.name.split(" ")[0] + '</h1>' +
+      '<div><h1 class="h1">Dashboard</h1>' +
       '<p class="sub">Post opportunities, receive quality-gated applications, and discover vetted student ventures.</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/' + Store.getRole() + '/opportunity/new\')">' + Icon("plus", 15) + 'Create Opportunity</button>' +
     '</div>' +
+
+    (orgProfilePct() < 100 ? profileBanner(orgProfilePct(), "#/" + Store.getRole() + "/profile", "Complete Profile", "Complete your investment preferences to improve startup matching.") : '') +
 
     '<div class="stats" style="margin-bottom:20px">' + stats.map(st =>
       '<div class="glass glass-hover stat"><span class="s-label"><span class="card-title-ic" style="width:26px;height:26px">' + Icon(st.icon, 13) + '</span>' + st.label + '</span><div class="s-val">' + st.val + '</div></div>'
@@ -525,10 +542,12 @@ function incubatorDashboard() {
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">' + greeting() + ', ' + inc.name.split(" ")[0] + '</h1>' +
-      '<p class="sub">Support, mentor, and build early-stage startups through your programs.</p></div>' +
+      '<div><h1 class="h1">Incubator Dashboard</h1>' +
+      '<p class="sub">Run programs, review applications, and support early-stage startups.</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/incubator/opportunity/new\')">' + Icon("plus", 15) + 'Post a Program</button>' +
     '</div>' +
+
+    (orgProfilePct() < 100 ? profileBanner(orgProfilePct(), "#/incubator/profile", "Complete Profile", "Add your program details so founders understand what you offer.") : '') +
 
     '<div class="glass-strong card" style="padding:24px;margin-bottom:20px">' +
       '<div class="row-between" style="flex-wrap:wrap;gap:14px">' +
@@ -584,10 +603,12 @@ function organizerDashboard() {
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">' + greeting() + ', ' + orgP.name.split(" ")[0] + '</h1>' +
+      '<div><h1 class="h1">Organizer Dashboard</h1>' +
       '<p class="sub">Post hackathons and startup opportunities, receive applications, and discover student talent.</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/organizer/opportunity/new\')">' + Icon("plus", 15) + 'Create Opportunity</button>' +
     '</div>' +
+
+    (orgProfilePct() < 100 ? profileBanner(orgProfilePct(), "#/organizer/profile", "Complete Profile", "Add your event details so founders and organizers can find you.") : '') +
 
     '<div class="glass-strong card" style="padding:24px;margin-bottom:20px">' +
       '<div class="row-between" style="flex-wrap:wrap;gap:14px">' +

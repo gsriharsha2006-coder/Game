@@ -125,126 +125,81 @@ function renderLogin() {
   window.scrollTo(0, 0);
 }
 
-/* ---------------- SIGNUP FLOWS ---------------- */
+/* ---------------- SIGNUP FLOWS ----------------
+   Reduced-friction onboarding: 2 short stages per role.
+   Everything else is collected progressively inside the product. */
 const AUTH_FLOWS = {
   founder: {
-    title: "Create your Founder Profile",
+    title: "Create your Founder Account",
     icon: "spark",
+    submitLabel: "Continue to Venture Connect",
     steps: [
-      { name: "Account", fields: [
+      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
         { key: "fullName", label: "Full Name", type: "text", req: true, ph: "e.g. Aarav Mehta" },
         { key: "email", label: "Email", type: "email", req: true, ph: "you@example.com" },
-        { key: "phone", label: "Phone Number", type: "tel", ph: "+91 …" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
         { key: "confirm", label: "Confirm Password", type: "password", req: true, ph: "Repeat your password" }
       ]},
-      { name: "Education", fields: [
+      { name: "Basic Profile", note: "Used to match you with the right opportunities.", fields: [
         { key: "college", label: "College / University", type: "text", req: true, ph: "e.g. IIT Bombay" },
-        { key: "degree", label: "Degree", type: "text", ph: "e.g. B.Tech" },
-        { key: "branch", label: "Branch / Department", type: "text", ph: "e.g. Mechanical Engineering" },
-        { key: "gradYear", label: "Graduation Year", type: "text", ph: "e.g. 2027" }
-      ]},
-      { name: "Founder Info", fields: [
-        { key: "founderType", label: "Founder Type", type: "select", req: true, options: FOUNDER_TYPES },
+        { key: "gradYear", label: "Graduation Year", type: "text", req: true, ph: "e.g. 2027" },
         { key: "startupName", label: "Startup / Idea Name", type: "text", req: true, ph: "e.g. EcoHarvest" },
-        { key: "description", label: "Short Startup Description", type: "textarea", req: true, ph: "What are you building, in one or two sentences?" },
-        { key: "industry", label: "Industry / Domain", type: "chips-single", req: true, options: INDUSTRIES }
-      ]},
-      { name: "Startup Profile", fields: [
-        { key: "stage", label: "Startup Stage", type: "chips-single", req: true, options: STARTUP_STAGES },
-        { key: "bio", label: "Short Bio", type: "textarea", ph: "Who you are and why you are building this." },
-        { key: "skills", label: "Skills", type: "text", ph: "Comma separated, e.g. Product, ML, Hardware" },
-        { key: "teamSize", label: "Team Size", type: "select", options: ["Just me", "2", "3", "4", "5+"] },
-        { key: "location", label: "Location", type: "text", ph: "e.g. Mumbai, India" }
-      ]},
-      { name: "Complete", fields: [
-        { key: "linkedin", label: "LinkedIn", type: "text", ph: "linkedin.com/in/…" },
-        { key: "website", label: "Portfolio / Website", type: "text", ph: "yourstartup.dev" },
-        { key: "otherLinks", label: "Other relevant links", type: "text", ph: "GitHub, resume, deck — optional" }
+        { key: "industry", label: "Domain", type: "chips-single", req: true, options: INDUSTRIES },
+        { key: "stage", label: "Current Stage", type: "chips-single", req: true, options: STARTUP_STAGES }
       ]}
     ]
   },
   investor: {
-    title: "Create Investor Profile",
+    title: "Create your Investor Account",
     icon: "trending",
+    submitLabel: "Enter Investor Dashboard",
     steps: [
-      { name: "Account", fields: [
+      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
         { key: "fullName", label: "Full Name", type: "text", req: true, ph: "e.g. Nikhil Rao" },
         { key: "email", label: "Work Email", type: "email", req: true, ph: "you@firm.com" },
-        { key: "phone", label: "Phone Number", type: "tel", ph: "+91 …" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
         { key: "confirm", label: "Confirm Password", type: "password", req: true, ph: "Repeat your password" }
       ]},
-      { name: "Organization", fields: [
-        { key: "org", label: "Investment Firm Name", type: "text", req: true, ph: "e.g. Meridian Capital" },
-        { key: "role", label: "Designation / Role", type: "text", ph: "e.g. Partner" },
-        { key: "website", label: "Website", type: "text", ph: "meridian.example" },
-        { key: "location", label: "Location", type: "text", ph: "e.g. Hyderabad, India" }
-      ]},
-      { name: "Investment Profile", fields: [
-        { key: "sectors", label: "Investment Domain / Sector", type: "chips-multi", req: true, options: INVESTOR_SECTORS },
-        { key: "stages", label: "Investment Stage", type: "chips-multi", req: true, options: INVESTOR_STAGES }
-      ]},
-      { name: "Preferences", fields: [
-        { key: "ticket", label: "Funding / Ticket Size", type: "chips-single", req: true, options: TICKET_SIZES },
-        { key: "geography", label: "Geography", type: "chips-single", req: true, options: GEOGRAPHIES },
-        { key: "thesis", label: "Investment Thesis", type: "textarea", req: true, ph: "What do you look for in a startup?" }
-      ]},
-      { name: "Complete", fields: [
-        { key: "linkedin", label: "LinkedIn", type: "text", ph: "linkedin.com/in/…" },
-        { key: "portfolio", label: "Portfolio Website", type: "text", ph: "yourfirm.com" },
-        { key: "prevInvestments", label: "Previous Investments", type: "textarea", ph: "Names of startups you have backed — optional" }
+      { name: "Investment Profile", note: "Preferences like ticket size and geography can be completed later from your profile.", fields: [
+        { key: "org", label: "Investment Firm", type: "text", req: true, ph: "e.g. Meridian Capital" },
+        { key: "sectors", label: "Investment Domain", type: "chips-multi", req: true, options: INVESTOR_SECTORS },
+        { key: "stages", label: "Investment Stage", type: "chips-single", req: true, options: ["Idea Stage", "Pre-Seed", "Seed", "Series A+", "MVP / Early Revenue"] }
       ]}
     ]
   },
   incubator: {
-    title: "Create Incubator Profile",
+    title: "Create your Incubator Account",
     icon: "layers",
+    submitLabel: "Enter Incubator Dashboard",
     steps: [
-      { name: "Account", fields: [
+      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
         { key: "fullName", label: "Full Name", type: "text", req: true, ph: "e.g. Priya Nair" },
         { key: "email", label: "Official Email", type: "email", req: true, ph: "hello@incubator.org" },
-        { key: "phone", label: "Phone Number", type: "tel", ph: "+91 …" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
         { key: "confirm", label: "Confirm Password", type: "password", req: true, ph: "Repeat your password" }
       ]},
-      { name: "Organization", fields: [
+      { name: "Organization", note: "Program details like support and duration can be completed later from your profile.", fields: [
         { key: "org", label: "Incubator Name", type: "text", req: true, ph: "e.g. Example Incubator" },
-        { key: "orgType", label: "Organization Type", type: "select", req: true, options: INCUBATOR_ORG_TYPES },
-        { key: "website", label: "Website", type: "text", ph: "exampleincubator.io" },
-        { key: "location", label: "Location", type: "text", ph: "e.g. Mumbai, India" }
-      ]},
-      { name: "Startup Focus", fields: [
-        { key: "sectors", label: "Domains / Sectors", type: "chips-multi", req: true, options: INCUBATOR_SECTORS },
+        { key: "sectors", label: "Primary Domain", type: "chips-multi", req: true, options: INCUBATOR_SECTORS },
         { key: "stages", label: "Startup Stage Supported", type: "chips-multi", req: true, options: INCUBATOR_STAGES }
-      ]},
-      { name: "Support", fields: [
-        { key: "support", label: "Support Offered", type: "chips-multi", req: true, options: SUPPORT_TYPES },
-        { key: "duration", label: "Typical Program Duration", type: "text", ph: "e.g. 12 weeks" },
-        { key: "funding", label: "Funding / Support Available", type: "text", ph: "e.g. $25,000 + workspace" },
-        { key: "equity", label: "Equity Requirement (if any)", type: "text", ph: "e.g. 6% or None" },
-        { key: "description", label: "Short description of the incubator", type: "textarea", ph: "What programs do you run?" }
-      ]},
-      { name: "Complete", fields: [] }
+      ]}
     ]
   },
   organizer: {
-    title: "Create Organizer Profile",
+    title: "Create your Organizer Account",
     icon: "calendar",
+    submitLabel: "Enter Organizer Dashboard",
     steps: [
-      { name: "Account", fields: [
+      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
         { key: "org", label: "Organization / Organizer Name", type: "text", req: true, ph: "e.g. Hack the Valley Collective" },
-        { key: "orgType", label: "Organizer Type", type: "select", req: true, options: ORGANIZER_TYPES },
         { key: "email", label: "Official Email", type: "email", req: true, ph: "events@org.com" },
-        { key: "phone", label: "Phone", type: "tel", ph: "+91 …" },
-        { key: "website", label: "Website", type: "text", ph: "org.dev" },
-        { key: "location", label: "Location", type: "text", ph: "e.g. Bangalore, India" }
+        { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
+        { key: "confirm", label: "Confirm Password", type: "password", req: true, ph: "Repeat your password" }
       ]},
-      { name: "About", fields: [
-        { key: "about", label: "About Organization", type: "textarea", req: true, ph: "What events and programs do you run?" },
-        { key: "domains", label: "Typical Hackathon Domains", type: "chips-multi", req: true, options: HACKATHON_DOMAINS }
-      ]},
-      { name: "Complete", fields: [] }
+      { name: "Organization", note: "Event details can be completed later from your profile.", fields: [
+        { key: "orgType", label: "Organizer Type", type: "select", req: true, options: ORGANIZER_TYPES },
+        { key: "domains", label: "Typical Domains", type: "chips-multi", req: true, options: HACKATHON_DOMAINS }
+      ]}
     ]
   }
 };
@@ -267,8 +222,8 @@ function renderSignup(role) {
 
   const fields = (step.fields || []).map(f => authField(f)).join("");
 
-  const heroTitle = role === "founder" ? "Create your Founder Profile" : "Join the Venture Connect Ecosystem";
-  const heroSub = role === "founder" ? "Create your Founder Profile" : role === "investor" ? "Create your Investor Profile" : role === "incubator" ? "Create your Incubator Profile" : "Create your Organizer Profile";
+  const heroTitle = flow.title;
+  const heroSub = role === "investor" ? "Investor Profile" : role === "incubator" ? "Incubator Profile" : "Organizer Profile";
 
   const html =
     '<nav class="land-nav">' +
@@ -281,8 +236,9 @@ function renderSignup(role) {
         '<div style="margin-bottom:22px">' +
           '<span class="vc-logo lg-auth" style="justify-content:center;margin-bottom:14px"><img src="assets/logo/logo-primary.png" alt="Venture Connect" /></span>' +
           '<h1 class="h2" style="text-align:center">' + heroTitle + '</h1>' +
-          '<p class="small muted" style="text-align:center;margin-top:2px">' + (role === "founder" ? "Your startup journey starts here." : heroSub + " — this shapes your dashboard experience.") + '</p>' +
+          '<p class="small muted" style="text-align:center;margin-top:2px">' + (role === "founder" ? "Two quick steps and you are in — everything else happens inside the product." : "Two quick steps and you are in — preferences can be completed later from your profile.") + '</p>' +
           '<p class="small faint" style="text-align:center;margin-top:10px">Step ' + (authStep + 1) + ' of ' + flow.steps.length + ' — ' + step.name + '</p>' +
+          (step.note ? '<p class="tiny faint" style="text-align:center;margin-top:4px">' + step.note + '</p>' : '') +
         '</div>' +
 
         '<div class="step-bar">' + stepBar + '</div>' +
@@ -293,7 +249,7 @@ function renderSignup(role) {
         '<div class="row-between" style="margin-top:26px">' +
           '<button class="btn btn-ghost" onclick="App.authPrev()"' + (authStep === 0 ? " disabled" : "") + '>' + Icon("chevL", 14) + 'Back</button>' +
           (last
-            ? '<button class="btn btn-primary btn-lg" onclick="App.authSubmit()">' + Icon("checkCircle", 16) + 'Complete Profile</button>'
+            ? '<button class="btn btn-primary btn-lg" onclick="App.authSubmit()">' + Icon("checkCircle", 16) + (flow.submitLabel || "Create Account") + '</button>'
             : '<button class="btn btn-primary" onclick="App.authNext()">Continue' + Icon("chevR", 14) + '</button>') +
         '</div>' +
         '<p class="tiny faint" style="text-align:center;margin-top:16px">By continuing you agree to the Venture Connect demo terms. All data stays in your browser.</p>' +
@@ -308,13 +264,13 @@ function authSummary(role, flow) {
   const d = authDraft;
   const rows = [];
   if (role === "founder") {
-    rows.push(["Name", d.fullName], ["Email", d.email], ["College", d.college], ["Founder type", d.founderType], ["Startup", d.startupName], ["Industry", d.industry], ["Stage", d.stage], ["Location", d.location]);
+    rows.push(["Name", d.fullName], ["Email", d.email], ["College", d.college], ["Graduation year", d.gradYear], ["Startup", d.startupName], ["Domain", d.industry], ["Stage", d.stage]);
   } else if (role === "investor") {
-    rows.push(["Name", d.fullName], ["Email", d.email], ["Firm", d.org], ["Role", d.role], ["Domains", (d.sectors || []).join(", ")], ["Stages", (d.stages || []).join(", ")], ["Ticket", d.ticket], ["Geography", d.geography]);
+    rows.push(["Name", d.fullName], ["Email", d.email], ["Firm", d.org], ["Domains", (d.sectors || []).join(", ")], ["Stages", (d.stages || []).join(", ")]);
   } else if (role === "incubator") {
-    rows.push(["Name", d.fullName], ["Email", d.email], ["Incubator", d.org], ["Type", d.orgType], ["Focus", (d.sectors || []).join(", ")], ["Stages", (d.stages || []).join(", ")], ["Support", (d.support || []).join(", ")], ["Duration", d.duration]);
+    rows.push(["Name", d.fullName], ["Email", d.email], ["Incubator", d.org], ["Focus", (d.sectors || []).join(", ")], ["Stages", (d.stages || []).join(", ")]);
   } else {
-    rows.push(["Organization", d.org], ["Type", d.orgType], ["Email", d.email], ["Location", d.location], ["Domains", (d.domains || []).join(", ")]);
+    rows.push(["Organization", d.org], ["Type", d.orgType], ["Email", d.email], ["Domains", (d.domains || []).join(", ")]);
   }
   return '<div style="padding:16px 18px;border-radius:16px;background:var(--accent-softer);border:1px solid rgba(99,102,241,.15)">' +
     '<div class="semibold small" style="color:var(--accent-deep);margin-bottom:10px">' + Icon("checkCircle", 13) + ' Almost there — review your profile</div>' +

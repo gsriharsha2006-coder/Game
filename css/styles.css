@@ -1310,3 +1310,62 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
   .btn-sm { min-height: 36px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   PRODUCTIZATION (v7) — next-action panel
+   ============================================================ */
+
+.next-action {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 22px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--hairline-light);
+  border-left: 3px solid var(--accent);
+}
+.next-action .na-ic {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  flex: none;
+}
+.next-action.violet { border-left-color: #8b5cf6; }
+.next-action.violet .na-ic { background: linear-gradient(135deg, #8b5cf6, #6366f1); box-shadow: 0 10px 20px -10px rgba(139, 92, 246, 0.55); }
+.next-action.indigo { border-left-color: #6366f1; }
+.next-action.indigo .na-ic { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 10px 20px -10px rgba(79, 70, 229, 0.55); }
+.next-action.green { border-left-color: #0ea472; }
+.next-action.green .na-ic { background: linear-gradient(135deg, #10b981, #0ea472); box-shadow: 0 10px 20px -10px rgba(14, 164, 114, 0.5); }
+.next-action.amber { border-left-color: #d97706; }
+.next-action.amber .na-ic { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 10px 20px -10px rgba(217, 119, 6, 0.5); }
+.next-action.blue { border-left-color: #2563eb; }
+.next-action.blue .na-ic { background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.5); }
+
+@media (max-width: 560px) {
+  .next-action .btn { width: 100%; }
+}
+
+/* ============================================================
+   PRODUCTIZATION (v7) — profile completion banner
+   ============================================================ */
+
+.profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 13px 16px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: var(--shadow-sm);
+}
+.profile-banner .bar-track { background: rgba(99, 102, 241, 0.14); }
