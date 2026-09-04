@@ -403,7 +403,7 @@ const App = {
       : '');
 
     const title = PAGE_TITLES[role][page] || "Venture Connect";
-    const sub = parts.length > 2 ? this.pageSub(parts) : ROLE_SUB[role];
+    const sub = parts.length > 2 ? this.pageSub(parts) : this.contextSub(role, page);
 
     return '' +
       '<div class="app">' +
@@ -489,6 +489,17 @@ const App = {
       }
     }
     return "";
+  },
+
+  contextSub(role, page) {
+    const copy = {
+      founder: { dashboard: "Your startup workspace", workspace: "Build and refine your startup", opportunities: "Browse opportunities accepting applications", applications: "Track the opportunities you are pursuing", readiness: "Strengthen your application before you apply", messaging: "Conversations with your ecosystem", profile: "Keep your founder details current" },
+      investor: { dashboard: "Review your startup pipeline", discover: "Screened startups ready for review", queue: "Startups waiting for your review", interested: "Startups you want to follow up with", saved: "Your shortlist for later review", opportunities: "Manage the opportunities you run", applications: "Qualified applications from founders", messaging: "Conversations with founders" },
+      incubator: { dashboard: "Run programs and review founders", discover: "Qualified startups for your programs", opportunities: "Manage your incubator programs", applications: "Applications to your programs", messaging: "Conversations with founders" },
+      organizer: { dashboard: "Publish and manage events", opportunities: "Manage opportunities and registration links", applications: "Venture Connect applications only", messaging: "Conversations with participants" },
+      internal: { dashboard: "Operational quality control", applications: "Review the Venture Connect pipeline" }
+    };
+    return (copy[role] && copy[role][page]) || ROLE_SUB[role];
   },
 
   /* ---------------- dropdowns & drawer ---------------- */

@@ -67,10 +67,10 @@ function investorDashboard() {
   const recs = Store.passedStartups().filter(s => recIds.includes(s.id)).slice(0, 2);
 
   const stats = [
-    { label: "Published opportunities", val: published.length, icon: "briefcase" },
-    { label: "Qualified applications", val: qualifiedApps.length, icon: "shield" },
+    { label: "Review queue", val: Store.state.queue.length, icon: "layers" },
+    { label: "New qualified startups", val: recs.length, icon: "eye" },
     { label: "Interested startups", val: Store.state.interested.length, icon: "heart" },
-    { label: "Discoverable startups", val: Store.passedStartups().length, icon: "eye" }
+    { label: "Active opportunities", val: published.length, icon: "briefcase" }
   ];
 
   const oppRows = myOpps.slice(0, 3).map(o =>
@@ -96,7 +96,7 @@ function investorDashboard() {
   const html =
     '<div class="page-head">' +
       '<div><h1 class="h1">Dashboard</h1>' +
-      '<p class="sub">Post opportunities, receive quality-gated applications, and discover vetted student ventures.</p></div>' +
+      '<p class="sub">Review qualified startups, manage your opportunities, and keep your pipeline moving.</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/' + Store.getRole() + '/opportunity/new\')">' + Icon("plus", 15) + 'Create Opportunity</button>' +
     '</div>' +
 
@@ -405,7 +405,7 @@ function investorOpportunities() {
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">Opportunities</h1><p class="sub">Create and manage the opportunities founders see on their side.</p></div>' +
+      '<div><h1 class="h1">Opportunities</h1><p class="sub">' + (Store.getRole() === "organizer" ? "Publish events, manage official registration links, and track founder interest." : Store.getRole() === "incubator" ? "Run programs and review the founders who apply." : "Manage the opportunities founders see on their side.") + '</p></div>' +
       '<button class="btn btn-primary" onclick="App.navigate(\'#/' + Store.getRole() + '/opportunity/new\')">' + Icon("plus", 15) + 'Create Opportunity</button>' +
     '</div>' +
     '<div class="row-wrap" style="margin-bottom:18px">' + chips.map(c =>

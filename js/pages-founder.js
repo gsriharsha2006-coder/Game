@@ -90,14 +90,15 @@ function founderDashboard() {
   const matched = published.filter(o => o.sector === s.sector);
   const recOpps = (matched.length ? matched : published).slice(0, 3);
 
-  const oppCards = recOpps.map(o =>
-    '<div class="glass glass-hover" style="padding:14px 15px;border-radius:15px;cursor:pointer" onclick="App.navigate(\'#/founder/opportunity/' + o.id + '\')">' +
-      '<div class="row-between" style="margin-bottom:5px"><span class="tag">' + o.category + '</span><span class="tiny faint">' + Icon("clock", 11) + ' ' + o.deadline + '</span></div>' +
-      '<div class="semibold" style="font-size:13.5px;line-height:1.35">' + o.title + '</div>' +
-      '<div class="tiny faint" style="margin-top:4px">' + o.org + (o.funding ? ' · ' + o.funding : '') + '</div>' +
-    '</div>'
-  ).join("");
+  const oppCards = recOpps.map(o => {
+    const external = o.applicationMode === "external" || o.type === "hackathon";
+    return '<div class="product-row opportunity-row"><div class="product-row-main">' +
+      '<div class="row-wrap" style="gap:6px"><span class="badge ' + (external ? "badge-info" : "badge-violet") + '">' + (external ? Icon("external", 11) + 'External application' : o.category) + '</span><span class="tag">' + (o.sector || "Other") + '</span></div>' +
+      '<div class="semibold" style="font-size:14px;margin-top:7px">' + o.title + '</div><div class="tiny faint" style="margin-top:3px">' + o.org + ' · Deadline ' + o.deadline + '</div></div>' +
+      '<button class="btn ' + (external ? "btn-primary" : "btn-soft") + ' btn-sm" onclick="App.navigate(\'#/founder/opportunity/' + o.id + '\')">' + (external ? Icon("external", 13) + 'Apply' : Icon("eye", 13) + 'View') + '</button></div>';
+  }).join("");
 
+  const externalApps = Store.externalApplicationsForStartup(Store.founder().startupId);
   const appRows = allApps.slice(0, 2).map(a => {
     const st = founderAppStatus(a);
     const o = Store.getOpportunity(a.opportunityId);
@@ -106,6 +107,9 @@ function founderDashboard() {
       '<div class="tiny faint">' + (o ? o.org + ' · ' : '') + 'Submitted: ' + a.submitted + '</div></div>' +
       '<span class="badge ' + (st.tone === "success" ? "badge-success" : st.tone === "warning" ? "badge-warning" : st.tone === "danger" ? "badge-danger" : "badge-indigo") + '">' + st.label + '</span>' +
     '</div>';
+  }).join("") + externalApps.slice(0, 2).map(a => {
+    const o = Store.getOpportunity(a.opportunityId);
+    return o ? '<div class="product-row application-row"><div class="asr-main"><div class="semibold" style="font-size:13.5px">' + o.title + '</div><div class="tiny faint">' + o.org + ' · Link opened ' + a.clickedAt + '</div></div><span class="badge badge-info">' + Icon("external", 11) + 'External application</span></div>' : "";
   }).join("");
 
   const wsPending = WORKSPACE_SECTIONS.filter(sec => !sectionOk((f.workspace[sec.key] || "").trim().length));
@@ -120,24 +124,12 @@ function founderDashboard() {
 
   const html =
     '<div class="page-head">' +
-      '<div><h1 class="h1">Dashboard</h1><p class="sub">Your startup, your applications, and what needs your attention today.</p></div>' +
-    '</div>' +
-
-    (founderProfilePct(f) < 100 ? profileBanner(founderProfilePct(f), "#/founder/profile", "Complete Profile", "Complete your profile to improve opportunity matching.") : '') +
-
-    /* MAIN: one clear next action */
-    '<div class="next-action ' + na.tone + '">' +
-      '<span class="na-ic">' + Icon(na.icon, 21) + '</span>' +
-      '<div style="flex:1;min-width:220px">' +
-        '<div class="tiny faint semibold" style="letter-spacing:.1em">NEXT ACTION</div>' +
-        '<div class="semibold" style="font-size:16.5px;margin-top:3px">' + na.title + '</div>' +
-        '<div class="small muted" style="margin-top:4px;max-width:540px;line-height:1.6">' + na.desc + '</div>' +
-      '</div>' +
-      '<button class="btn btn-primary" onclick="App.navigate(\'' + na.route + '\')">' + Icon("arrowR", 15) + na.cta + '</button>' +
+      '<div><h1 class="h1">Dashboard</h1><p class="sub">Your startup workspace</p></div>' +
+      (founderProfilePct(f) < 100 ? '<div class="page-context"><span class="profile-context">Profile ' + founderProfilePct(f) + '% complete</span><button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/profile\')">Complete Profile</button></div>' : '') +
     '</div>' +
 
     /* TOP: current startup */
-    '<div class="glass-strong card" style="padding:22px;margin-bottom:20px">' +
+    '<div class="glass-strong card startup-overview" style="padding:22px;margin-bottom:16px">' +
       '<div class="row-between" style="flex-wrap:wrap;gap:14px">' +
         '<div class="row" style="gap:16px">' + startupLogo(s, 48) +
           '<div>' +
@@ -158,41 +150,38 @@ function founderDashboard() {
       '</div>' +
     '</div>' +
 
+    '<div class="next-action compact-next ' + na.tone + '">' +
+      '<span class="na-ic">' + Icon(na.icon, 21) + '</span>' +
+      '<div style="flex:1;min-width:220px"><div class="tiny faint semibold" style="letter-spacing:.1em">NEXT STEP</div><div class="semibold" style="font-size:15px;margin-top:3px">' + na.title + '</div><div class="small muted" style="margin-top:3px;max-width:540px;line-height:1.5">' + na.desc + '</div></div>' +
+      '<button class="btn btn-primary btn-sm" onclick="App.navigate(\'' + na.route + '\')">' + Icon("arrowR", 14) + na.cta + '</button>' +
+    '</div>' +
+
     '<div class="grid-2" style="margin-bottom:20px">' +
-      '<div class="glass card">' +
+      '<div class="solid-panel card">' +
         '<div class="card-header"><div class="h3"><span class="card-title-ic blue">' + Icon("briefcase", 17) + '</span>Recommended opportunities</div>' +
         '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/opportunities\')">Browse all</button></div>' +
         (recOpps.length
           ? '<div class="stack">' + oppCards + '</div>'
           : emptyState("briefcase", "No opportunities yet", "Opportunities posted by investors and incubators will appear here.")) +
       '</div>' +
-      '<div class="glass card">' +
+      '<div class="solid-panel card">' +
         '<div class="card-header"><div class="h3"><span class="card-title-ic green">' + Icon("send", 17) + '</span>Recent applications</div>' +
-        (allApps.length ? '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/applications\')">View all</button>' : '') + '</div>' +
-        (allApps.length
+        (allApps.length || externalApps.length ? '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/founder/applications\')">View all</button>' : '') + '</div>' +
+        (allApps.length || externalApps.length
           ? '<div class="stack">' + appRows + '</div>'
           : emptyState("send", "No applications yet", "Applications you submit to opportunities will appear here.", '<button class="btn btn-primary" style="margin-top:8px" onclick="App.navigate(\'#/founder/opportunities\')">' + Icon("briefcase", 15) + 'Explore Opportunities</button>')) +
       '</div>' +
     '</div>' +
 
     '<div class="grid-2">' +
-      '<div class="glass card">' +
-        '<div class="card-header"><div class="h3"><span class="card-title-ic">' + Icon("edit", 17) + '</span>Idea Workspace</div>' +
-        '<span class="badge badge-indigo">' + completion + '% complete</span></div>' +
-        bar(completion) +
-        '<div style="margin-top:14px">' + wsList + '</div>' +
+      '<div class="solid-panel card">' +
+        '<div class="card-header"><div class="h3"><span class="card-title-ic">' + Icon("edit", 17) + '</span>Idea Workspace</div><span class="badge badge-indigo">' + completion + '% complete</span></div>' +
+        bar(completion) + '<div style="margin-top:14px">' + wsList + '</div>' +
         '<button class="btn btn-primary btn-block" style="margin-top:16px" onclick="App.navigate(\'#/founder/workspace\')">' + Icon("arrowR", 15) + (wsPending.length ? 'Continue Workspace' : 'Review Workspace') + '</button>' +
       '</div>' +
-      '<div class="glass card">' +
-        '<div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("trending", 17) + '</span>VC Readiness</div>' +
-        '<span class="score-chip">' + s.score + '/100</span></div>' +
-        '<div class="row" style="gap:18px;align-items:center">' +
-          Ring(s.score, 84, "readiness") +
-          '<div style="flex:1;min-width:0">' +
-            '<div class="small muted" style="line-height:1.6;margin-bottom:10px">' + (s.score >= 75 ? "Strong overall — investors will see a credible early-stage profile." : s.score >= 55 ? "Solid foundation — completing your workspace will lift this score." : "Early stage — keep building out your workspace to improve readiness.") + '</div>' +
-            '<div class="small semibold" style="margin-bottom:4px">Funding readiness</div>' + bar(fr, "thin") +
-          '</div>' +
-        '</div>' +
+      '<div class="solid-panel card">' +
+        '<div class="card-header"><div class="h3"><span class="card-title-ic violet">' + Icon("trending", 17) + '</span>VC Readiness</div><span class="score-chip">' + s.score + '/100</span></div>' +
+        '<div class="row" style="gap:18px;align-items:center">' + Ring(s.score, 84, "readiness") + '<div style="flex:1;min-width:0"><div class="small muted" style="line-height:1.6;margin-bottom:10px">' + (s.score >= 75 ? "Strong overall — investors will see a credible early-stage profile." : s.score >= 55 ? "Solid foundation — completing your workspace will lift this score." : "Early stage — keep building out your workspace to improve readiness.") + '</div><div class="small semibold" style="margin-bottom:4px">Funding readiness</div>' + bar(fr, "thin") + '</div></div>' +
         '<button class="btn btn-soft btn-block" style="margin-top:14px" onclick="App.navigate(\'#/founder/readiness\')">' + Icon("file", 15) + 'View Report</button>' +
       '</div>' +
     '</div>';

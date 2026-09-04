@@ -1334,6 +1334,8 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
   .marketplace-tools .search-box { min-width: 0 !important; }
   .marketplace-selects { display: grid; grid-template-columns: 1fr 1fr; }
   .marketplace-selects .select { width: 100%; min-width: 0; }
+  .page-context { width: 100%; justify-content: space-between; }
+  .compact-next .btn { width: 100%; }
 }
 
 /* ============================================================
@@ -1394,3 +1396,13 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.022em; }
   box-shadow: var(--shadow-sm);
 }
 .profile-banner .bar-track { background: rgba(99, 102, 241, 0.14); }
+.page-context { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.profile-context { color: var(--ink-3); font-size: 12px; font-weight: 650; }
+.solid-panel { background: rgba(255, 255, 255, 0.86); border: 1px solid var(--hairline); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); }
+.product-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.product-row:last-child { border-bottom: 0; }
+.product-row-main { flex: 1; min-width: 0; }
+.opportunity-row .btn { flex: none; }
+.compact-next { padding: 13px 16px; border-radius: 15px; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
+.compact-next .na-ic { width: 34px; height: 34px; border-radius: 10px; }
+.compact-next .btn { flex: none; }

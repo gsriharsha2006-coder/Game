@@ -51,12 +51,12 @@ function internalDashboard() {
     ).join("") + '</div>' +
 
     '<div class="grid-2" style="align-items:start">' +
-      '<div class="glass card">' +
+      '<div class="solid-panel card">' +
         '<div class="card-header"><div class="h3"><span class="card-title-ic">' + Icon("layers", 17) + '</span>In review now</div>' +
         '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/internal/applications\')">All applications</button></div>' +
         (inReviewRows || '<p class="muted small">No applications in review.</p>') +
       '</div>' +
-      '<div class="glass card">' +
+      '<div class="solid-panel card">' +
         '<div class="card-header"><div class="h3"><span class="card-title-ic green">' + Icon("trophy", 17) + '</span>Recently gated</div></div>' +
         (gatedRows || '<p class="muted small">No applications passed the gate yet.</p>') +
       '</div>' +
