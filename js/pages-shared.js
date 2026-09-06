@@ -253,6 +253,6 @@ function userMenuHtml() {
     (role !== "internal" ? '<button class="dd-item" onclick="App.switchRole(\'internal\')">' + Icon("shield", 14) + 'Open Venture Connect Review (internal)</button>' : '') +
     '<button class="dd-item" onclick="App.navigate(\'#/\');App.closeDropdown()">' + Icon("home", 14) + 'View landing page</button>' +
     '<div class="dd-sep"></div>' +
-    '<button class="dd-item" onclick="App.resetDemo()">' + Icon("refresh", 14) + 'Reset demo data</button>' +
+    '<button class="dd-item" onclick="App.reset()">' + Icon("refresh", 14) + 'Reset Data</button>' +
     '<button class="dd-item danger" onclick="App.signOut()">' + Icon("logout", 14) + 'Sign out</button>';
 }

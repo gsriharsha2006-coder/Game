@@ -140,11 +140,8 @@ function renderLanding() {
 
       '<footer class="footer">' +
         '<a href="#/" class="vc-logo lg-foot" title="Venture Connect"><img src="assets/logo/logo-primary.png" alt="Venture Connect" /></a>' +
-        '<p>Demo platform — all startups, people, and institutions are fictional.</p>' +
-        '<div class="row">' +
-          '<button class="btn btn-ghost btn-sm" onclick="App.enter(\'founder\')">Founder demo</button>' +
-          '<button class="btn btn-ghost btn-sm" onclick="App.enter(\'investor\')">Investor demo</button>' +
-        '</div>' +
+        '<p>Venture Connect is a startup ecosystem platform for student founders, investors, and ecosystem partners.</p>' +
+          '<a href="#/auth" class="btn btn-primary btn-sm">Get Started</a>' +
       '</footer>' +
     '</div>';
 

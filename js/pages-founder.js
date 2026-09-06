@@ -26,7 +26,7 @@ function appNextStep(app) {
   return { text: "Your application is under review by Venture Connect." };
 }
 
-/* Founder's most relevant application (demo: their startup) */
+/* Founder's most relevant application */
 function myTopApp() {
   const apps = Store.applicationsForStartup(Store.founder().startupId);
   return apps.length ? apps[0] : null;

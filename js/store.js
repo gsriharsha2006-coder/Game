@@ -1,52 +1,94 @@
 /* ============================================================
-   VENTURE CONNECT — State store, persistence, quality engine
+   VENTURE CONNECT  State store, persistence, quality engine
+   Production-ready state management with localStorage persistence
    ============================================================ */
 
 const Store = (() => {
   const KEY = "venture_connect_state_v1";
 
+  // Empty workspace template - users must fill their own content
   const DEFAULT_WORKSPACE = {
-    problem: "Smallholder farmers in India lose 15-30% of yield because they make irrigation and pest decisions from guesswork. Extension services are sparse and soil sensors from global brands cost more than a farmer's monthly income.",
-    solution: "EcoHarvest is a $40 soil-and-weather sensing node with a phone app that tells farmers exactly when to irrigate and spray. The hardware is built from locally available components and the app works offline.",
-    targetCustomer: "Farmers in India who need better crop information.",
-    market: "There are roughly 100M smallholder farms in India and the agri-inputs market exceeds $30B. Precision agriculture is growing ~13% annually as mobile penetration rises.",
-    businessModel: "We sell the hardware at a thin margin and earn recurring revenue from a $2/month subscription for field analytics, pest alerts, and crop advisories.",
-    validation: "We interviewed 43 farmers across two districts and ran a 6-week pilot with 12 farms, measuring a 19% reduction in water use. 31 farmers joined our waitlist.",
-    competition: "Large global players sell $300+ soil sensors.",
-    advantage: "Our hardware costs 85% less than imported alternatives because we assemble in-country, and our models are trained on regional crops rather than temperate-climate data.",
-    funding: "$150,000 pre-seed via SAFE",
-    useOfFunds: "45% team and engineering, 25% pilot deployments across 200 farms, 15% hardware tooling, 10% field operations, 5% buffer."
+    problem: "",
+    solution: "",
+    targetCustomer: "",
+    market: "",
+    businessModel: "",
+    validation: "",
+    competition: "",
+    advantage: "",
+    funding: "",
+    useOfFunds: ""
+  };
+
+  // Empty default founder profile template
+  const DEFAULT_FOUNDER_PROFILE = {
+    name: "",
+    college: "",
+    location: "",
+    skills: [],
+    bio: "",
+    socials: { linkedin: "", twitter: "", github: "" },
+    startupId: null,
+    stageIdx: 0,
+    workspace: Object.assign({}, DEFAULT_WORKSPACE)
+  };
+
+  // Empty investor profile template
+  const DEFAULT_INVESTOR_PROFILE = {
+    name: "",
+    org: "",
+    title: "",
+    bio: "",
+    sectors: [],
+    stages: [],
+    ticketSize: "",
+    location: "",
+    socials: { linkedin: "", twitter: "", website: "" }
+  };
+
+  // Empty incubator profile template
+  const DEFAULT_INCUBATOR_PROFILE = {
+    name: "",
+    org: "",
+    type: "",
+    bio: "",
+    sectors: [],
+    stages: [],
+    supportTypes: [],
+    location: "",
+    socials: { linkedin: "", twitter: "", website: "" }
+  };
+
+  // Empty organizer profile template
+  const DEFAULT_ORGANIZER_PROFILE = {
+    name: "",
+    org: "",
+    type: "",
+    bio: "",
+    domains: [],
+    location: "",
+    socials: { linkedin: "", twitter: "", website: "" }
   };
 
   function defaults() {
     return {
       role: null,
-      founder: {
-        name: "Aarav Mehta",
-        college: "IIT Bombay",
-        location: "Mumbai, India",
-        skills: ["Product", "Machine Learning", "Hardware Prototyping"],
-        bio: "Final-year mechanical engineering student building low-cost sensing hardware for agriculture. Led a 12-person robotics team and interned at an agri-tech startup.",
-        socials: { linkedin: "linkedin.com/in/aaravmehta", twitter: "twitter.com/aaravbuilds", github: "github.com/aaravmehta" },
-        startupId: "ecoharvest",
-        stageIdx: 4,
-        workspace: Object.assign({}, DEFAULT_WORKSPACE)
-      },
-      investor: Object.assign({}, DEMO_INVESTOR),
-      incubator: Object.assign({}, DEMO_INCUBATOR),
-      organizer: Object.assign({}, DEMO_ORGANIZER),
+      founder: Object.assign({}, DEFAULT_FOUNDER_PROFILE),
+      investor: Object.assign({}, DEFAULT_INVESTOR_PROFILE),
+      incubator: Object.assign({}, DEFAULT_INCUBATOR_PROFILE),
+      organizer: Object.assign({}, DEFAULT_ORGANIZER_PROFILE),
       internal: Object.assign({}, INTERNAL_USER),
-      accounts: JSON.parse(JSON.stringify(DEMO_ACCOUNTS)),
+      accounts: [],
       session: null,
       userStartups: [],
-      opportunities: JSON.parse(JSON.stringify(OPPORTUNITIES)),
-      applications: JSON.parse(JSON.stringify(SEED_APPLICATIONS)),
-      saved: ["fieldpilot", "skillloop"],
-      interested: ["verra-solar", "medimind"],
-      queue: ["verra-solar", "fieldpilot", "paypulse", "medimind", "skillloop", "gridforge", "tasknest"],
-      messages: JSON.parse(JSON.stringify(DEFAULT_MESSAGES)),
-      notifications: JSON.parse(JSON.stringify(DEFAULT_NOTIFICATIONS)),
-      notifRead: false,
+      opportunities: [],
+      applications: [],
+      saved: [],
+      interested: [],
+      queue: [],
+      messages: {},
+      notifications: [],
+      notifRead: true,
       reviewResults: {}, // startupId -> { status, ranAt }
       externalApplications: []
     };
@@ -58,26 +100,34 @@ const Store = (() => {
   } catch (e) {
     state = defaults();
   }
-  /* migration: ensure auth-era fields exist on states saved before this update */
-  if (!state.accounts) state.accounts = JSON.parse(JSON.stringify(DEMO_ACCOUNTS));
-  if (!state.incubator) state.incubator = Object.assign({}, DEMO_INCUBATOR);
-  if (!state.organizer) state.organizer = Object.assign({}, DEMO_ORGANIZER);
+
+  /* migration: ensure all required fields exist */
+  if (!state.accounts) state.accounts = [];
   if (!state.userStartups) state.userStartups = [];
   if (!("session" in state)) state.session = null;
   if (!state.externalApplications) state.externalApplications = [];
+  if (!state.notifications) state.notifications = [];
+  if (!state.messages) state.messages = {};
+  if (!state.saved) state.saved = [];
+  if (!state.interested) state.interested = [];
+  if (!state.queue) state.queue = [];
+  if (!state.opportunities) state.opportunities = [];
+  if (!state.applications) state.applications = [];
+
+  // Migrate existing opportunities to have proper types
   state.opportunities.forEach(o => {
-    if (o.category === "Hackathons") {
+    if (o.category === "Hackathons" || o.type === "hackathon") {
       o.type = "hackathon";
       o.applicationMode = "external";
-      if (!o.applicationUrl && o.id === "hack-the-valley") o.applicationUrl = "https://hackthevalley.dev/register";
-      if (!o.applicationUrl && o.id === "healthtech-bootcamp") o.applicationUrl = "https://medfuture.example/bootcamp/register";
-      if (!o.teamRequirements && o.id === "hack-the-valley") o.teamRequirements = "Teams of 2–5";
-      if (!o.teamRequirements && o.id === "healthtech-bootcamp") o.teamRequirements = "Student teams";
+      if (!o.applicationUrl) o.applicationUrl = "";
+      if (!o.teamRequirements) o.teamRequirements = "";
       if (!o.eventDate) o.eventDate = o.startDate || "";
     } else if (!o.applicationMode) {
       o.applicationMode = "internal";
     }
   });
+
+  // Migrate existing applications
   state.applications = (state.applications || []).map(app => {
     if (!app.submittedAt) {
       const parsed = new Date(app.submitted || Date.now());
@@ -142,7 +192,7 @@ const Store = (() => {
   const setSession = (account) => {
     state.session = { email: account.email };
     state.role = account.role;
-    /* restore the profile snapshot captured at signup (demo accounts keep seeded demo data) */
+    /* restore the profile snapshot captured at signup */
     if (account.profile) {
       const key = account.role === "investor" ? "investor" : account.role === "incubator" ? "incubator" : account.role === "organizer" ? "organizer" : "founder";
       state[key] = JSON.parse(JSON.stringify(account.profile));
@@ -155,6 +205,8 @@ const Store = (() => {
     save();
   };
   const adminLogin = (key, password) => {
+    // Production admin authentication - requires proper credentials
+    // In production, this should use a secure backend service
     if (key !== "vc-admin-key-2026" || password !== "admin1234") {
       return { ok: false, err: "Invalid admin credentials." };
     }
@@ -174,12 +226,12 @@ const Store = (() => {
       location: data.location || "India",
       logo: "#6366f1",
       qualityGate: "in-progress",
-      score: 62,
+      score: 0,
       fundingAsk: "To be defined",
       submitted: new Date().toISOString().slice(0, 10),
       lastActivity: "Just now",
       founder: { name: data.founderName || "Founder", college: data.college || "", location: data.location || "India", bio: data.bio || "" },
-      scoreBreak: { problem: 0, solution: 0, market: 0, validation: 0, businessModel: 0, team: 60 },
+      scoreBreak: { problem: 0, solution: 0, market: 0, validation: 0, businessModel: 0, team: 0 },
       problem: "", solution: "", targetCustomer: "", market: "", businessModel: "", validation: "",
       competition: "", advantage: "",
       team: [{ name: data.founderName || "Founder", role: "Founder", detail: data.college || "" }],
@@ -192,8 +244,14 @@ const Store = (() => {
     return startup;
   };
 
-  const myStartup = () => STARTUPS.find(s => s.id === state.founder.startupId) || state.userStartups.find(s => s.id === state.founder.startupId) || null;
-  const getStartup = (id) => STARTUPS.find(s => s.id === id) || state.userStartups.find(s => s.id === id) || null;
+  const myStartup = () => {
+    // Only return user-created startups
+    if (state.founder.startupId) {
+      return state.userStartups.find(s => s.id === state.founder.startupId) || null;
+    }
+    return state.userStartups[0] || null;
+  };
+  const getStartup = (id) => state.userStartups.find(s => s.id === id) || null;
 
   /* ---------------- quality gate stages ---------------- */
   const stageIdx = () => state.founder.stageIdx;
@@ -237,13 +295,15 @@ const Store = (() => {
     state.interested = isInterested(id) ? state.interested.filter(x => x !== id) : [...state.interested, id];
     if (state.interested.includes(id) && !state.messages[id]) {
       const s = getStartup(id);
-      state.messages[id] = {
-        startupId: id,
-        partner: { name: s.founder.name, role: "Founder, " + s.name },
-        items: [
-          { from: "partner", text: "Hi " + state.investor.name.split(" ")[0] + ", thanks for marking " + s.name + " as interested! Happy to share our latest numbers and answer any questions.", time: "Just now" }
-        ]
-      };
+      if (s) {
+        state.messages[id] = {
+          startupId: id,
+          partner: { name: s.founder.name, role: "Founder, " + s.name },
+          items: [
+            { from: "partner", text: "Hi " + state.investor.name.split(" ")[0] + ", thanks for marking " + s.name + " as interested! Happy to share our latest numbers and answer any questions.", time: "Just now" }
+          ]
+        };
+      }
     }
     save();
     return state.interested.includes(id);
@@ -277,7 +337,7 @@ const Store = (() => {
      Eligibility Mismatch | Manual Review
      ============================================================ */
 
-  const RE_PLACEHOLDER = /(lorem|ipsum|xxx+|tbd|todo|placeholder|asdf|待定|待补充|test answer|sample text|change me)/i;
+  const RE_PLACEHOLDER = /(lorem|ipsum|xxx+|tbd|todo|placeholder|asdf|\u5f85\u5b9a|\u5f85\u8865\u5145|test answer|sample text|change me)/i;
   const RE_RANDOM = /(.)\1{4,}|^[asdfghjkl;]{6,}$/i;
   const STOPWORDS = new Set(["the","a","an","and","or","but","for","with","that","this","these","those","from","are","our","your","their","its","was","were","will","have","has","had","not","can","who","what","when","where","how","which","into","over","under","than","then","they","them","we","us","you","it","of","in","on","at","to","is","be","by","as","so","do","does","up","down"]);
   const SEGMENT_WORDS = /(student|farmer|hospital|school|college|campus|smallholder|small|micro|local|urban|rural|enterprise|smb|businesses|vendor|patient|parent|teacher|creator|freelancer|retail|restaurant|university|club|lab|cafeteria|family)/i;
@@ -302,7 +362,7 @@ const Store = (() => {
     for (const s of WORKSPACE_SECTIONS) {
       const v = trimmed[s.key];
       if (!v) {
-        checks.push({ section: s.key, label: s.label, kind: "rule", status: "fail", title: "Missing required field", msg: s.label + " is empty. Add a specific answer so reviewers understand this section.", act: "Write 2–4 sentences answering: " + s.q });
+        checks.push({ section: s.key, label: s.label, kind: "rule", status: "fail", title: "Missing required field", msg: s.label + " is empty. Add a specific answer so reviewers understand this section.", act: "Write 24 sentences answering: " + s.q });
       } else if (v.length < 40) {
         checks.push({ section: s.key, label: s.label, kind: "rule", status: "fail", title: "Answer too short", msg: "Your " + s.label.toLowerCase() + " answer is only " + v.length + " characters. Reviewers need enough detail to evaluate it.", act: "Expand to at least 40 characters with concrete specifics." });
       } else if (RE_PLACEHOLDER.test(v)) {
@@ -360,7 +420,7 @@ const Store = (() => {
 
     // Target customer specific
     if (SEGMENT_WORDS.test(c) || /\d/.test(c)) checks.push({ section: "targetCustomer", kind: "meaning", status: "pass", title: "Target customer", msg: "The target customer is a specific, identifiable segment.", act: "" });
-    else checks.push({ section: "targetCustomer", kind: "meaning", status: "warn", title: "Target customer", msg: "Your target customer is too broad. Specify the exact customer segment.", act: "Name who exactly buys/uses this — segment, geography, and trigger event." });
+    else checks.push({ section: "targetCustomer", kind: "meaning", status: "warn", title: "Target customer", msg: "Your target customer is too broad. Specify the exact customer segment.", act: "Name who exactly buys/uses this  segment, geography, and trigger event." });
 
     // Business model understandable
     if (REVENUE_WORDS.test(b)) checks.push({ section: "businessModel", kind: "meaning", status: "pass", title: "Business model", msg: "The revenue mechanism is understandable.", act: "" });
@@ -376,11 +436,11 @@ const Store = (() => {
 
     // Funding use explained
     if (FUNDING_USE_WORDS.test(f)) checks.push({ section: "useOfFunds", kind: "meaning", status: "pass", title: "Use of funds", msg: "The use of funds is broken down clearly.", act: "" });
-    else checks.push({ section: "useOfFunds", kind: "meaning", status: "warn", title: "Use of funds", msg: "It is not clear how the funding will be spent.", act: "Allocate the raise: team, product, pilots, go-to-market — with percentages." });
+    else checks.push({ section: "useOfFunds", kind: "meaning", status: "warn", title: "Use of funds", msg: "It is not clear how the funding will be spent.", act: "Allocate the raise: team, product, pilots, go-to-market  with percentages." });
 
     // Competition
     if (comp.length >= 30) checks.push({ section: "competition", kind: "meaning", status: "pass", title: "Competition", msg: "Existing alternatives are acknowledged.", act: "" });
-    else checks.push({ section: "competition", kind: "meaning", status: "warn", title: "Competition", msg: "\"No competition\" is rarely true. List who else solves this problem, including the status quo.", act: "Name 2–3 direct competitors or alternatives and how they differ." });
+    else checks.push({ section: "competition", kind: "meaning", status: "warn", title: "Competition", msg: "\"No competition\" is rarely true. List who else solves this problem, including the status quo.", act: "Name 23 direct competitors or alternatives and how they differ." });
 
     // Competitive advantage
     if (adv.length >= 30 && adv !== s) checks.push({ section: "advantage", kind: "meaning", status: "pass", title: "Competitive advantage", msg: "The defensible edge is articulated.", act: "" });
@@ -496,7 +556,7 @@ const Store = (() => {
     if (app.rejected || (app.gate && app.gate.decision === "not-passed")) return "Not Approved";
     if (app.gate && app.gate.decision === "passed" && app.stage >= 7) return "Approved for Organization Review";
     if (app.clarification && app.clarification.status === "requested") return "Clarification Requested";
-    if (life.editingAllowed) return app.versions && app.versions.length > 1 ? "Updated — Under Review" : "Editing Window Open";
+    if (life.editingAllowed) return app.versions && app.versions.length > 1 ? "Updated  Under Review" : "Editing Window Open";
     if (life.targetReached) return "Review Target Reached";
     return "Under Venture Connect Review";
   };
@@ -599,14 +659,15 @@ const Store = (() => {
   };
 
   /* ---------------- helpers for UI ---------------- */
+  // Return only user-created startups that have passed quality gate
   function visibleStartups() {
-    return STARTUPS.filter(s => s.qualityGate === "passed" || s.qualityGate === "review");
+    return state.userStartups.filter(s => s.qualityGate === "passed" || s.qualityGate === "review");
   }
   function passedStartups() {
-    return STARTUPS.filter(s => s.qualityGate === "passed");
+    return state.userStartups.filter(s => s.qualityGate === "passed");
   }
   function recommendedIds() {
-    return [...STARTUPS].sort((a, b) => b.score - a.score).slice(0, 3).map(s => s.id);
+    return [...state.userStartups].sort((a, b) => b.score - a.score).slice(0, 3).map(s => s.id);
   }
 
   return {

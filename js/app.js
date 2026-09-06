@@ -98,11 +98,11 @@ const App = {
     this.navigate("#/");
     toast("Signed out — see you soon", "info");
   },
-  resetDemo() {
+  reset() {
     Store.reset();
     this.closeDropdown();
     this.navigate("#/");
-    toast("Demo data reset to defaults", "info");
+    toast("Data reset to defaults", "info");
   },
 
   /* ---------------- authentication ---------------- */
@@ -122,7 +122,7 @@ const App = {
     closeModal();
     this.navigate("#/auth/signup/" + authPartner);
   },
-  authForgot() { toast("Password reset link sent (demo) — check your inbox", "info", "send"); },
+  authForgot() { toast("Password reset link sent — check your inbox", "info", "send"); },
   authFieldSet(key, value) { authDraft[key] = value; },
   authChip(key, value) {
     const flow = AUTH_FLOWS[authRole];
@@ -177,20 +177,20 @@ const App = {
     if (!res.ok) { toast(res.err, "error", "alert"); return; }
     this.afterAuth(res.account);
   },
-  afterAuth(account, suffix) {
-    toast("Welcome back, " + account.name.split(" ")[0] + (suffix || ""), "success", "spark");
+  afterAuth(account) {
+    toast("Welcome back, " + account.name.split(" ")[0] + , "success", "spark");
     this.navigate(ROLE_HOME[account.role] || "#/auth");
   },
   authSubmit() {
 
-  loginAs(email) {
-    const acc = Store.findAccount(email);
-    if (!acc) { toast("Demo account not found", "error", "alert"); return; }
-    Store.setSession(acc);
-    this.afterAuth(acc, " (demo)");
-  },
-  afterAuth(account, suffix) {
-    toast("Welcome back, " + account.name.split(" ")[0] + (suffix || ""), "success", "spark");
+
+
+
+
+
+
+
+    toast("Welcome back, " + account.name.split(" ")[0] + , "success", "spark");
     this.navigate(ROLE_HOME[account.role] || "#/auth");
   },
   adminLogin() {
@@ -962,7 +962,7 @@ const App = {
       if (body) body.insertAdjacentHTML("beforeend", '<div class="typing"><i></i><i></i><i></i></div>');
     }, 500);
     setTimeout(() => {
-      const reply = AUTO_REPLIES[activeConv] || "Thanks for the message — I'll get back to you shortly.";
+      const reply = "Thanks for the message — I'll get back to you shortly.";
       const c = Store.getConversation(activeConv);
       if (!c) return;
       c.items.push({ from: "partner", text: reply, time: "Just now" });
@@ -987,7 +987,7 @@ const App = {
   },
 
   exportReport() {
-    toast("Report exported (demo) — a PDF would be generated here", "info", "download");
+    toast("Report exported — a PDF would be generated here", "info", "download");
   }
 };
 

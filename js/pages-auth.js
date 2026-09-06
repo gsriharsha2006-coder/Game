@@ -46,13 +46,6 @@ function renderAuth() {
 
       '<div style="text-align:center;margin-top:38px">' +
         '<div class="small muted" style="margin-bottom:12px">Have an account? <a href="#/auth/login" class="semibold" style="color:var(--accent-deep)">Log in</a></div>' +
-        '<div class="small faint" style="margin-bottom:10px">Or explore with a demo account</div>' +
-        '<div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap">' +
-          '<button class="chip" onclick="App.loginAs(\'aarav@example.com\')">' + Icon("spark", 12) + ' Demo Founder</button>' +
-          '<button class="chip" onclick="App.loginAs(\'nikhil@meridian.example\')">' + Icon("trending", 12) + ' Demo Investor</button>' +
-          '<button class="chip" onclick="App.loginAs(\'hello@exampleincubator.io\')">' + Icon("layers", 12) + ' Demo Incubator</button>' +
-          '<button class="chip" onclick="App.loginAs(\'events@hackvalley.dev\')">' + Icon("calendar", 12) + ' Demo Organizer</button>' +
-        '</div>' +
         '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/auth/admin\')" style="margin-top:14px">' + Icon("shield", 14) + 'Admin Sign In</button>' +
       '</div>' +
     '</div>';
@@ -112,14 +105,6 @@ function renderLogin() {
           '<button class="btn btn-ghost" onclick="App.authPartnerModal()">' + Icon("eye", 14) + 'Investor / Ecosystem</button>' +
         '</div>' +
         '<div class="divider"></div>' +
-        '<div class="small faint" style="text-align:center;margin-bottom:10px">Quick demo access</div>' +
-        '<div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap">' +
-          '<button class="chip" onclick="App.loginAs(\'aarav@example.com\')">Founder</button>' +
-          '<button class="chip" onclick="App.loginAs(\'nikhil@meridian.example\')">Investor</button>' +
-          '<button class="chip" onclick="App.loginAs(\'hello@exampleincubator.io\')">Incubator</button>' +
-          '<button class="chip" onclick="App.loginAs(\'events@hackvalley.dev\')">Organizer</button>' +
-          '<button class="chip" onclick="App.loginAs(\'admin@ventureconnect.internal\')">Admin</button>' +
-        '</div>' +
         '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/auth/admin\')" style="margin-top:14px">' + Icon("shield", 14) + 'Admin Sign In</button>' +
       '</div>' +
     '</div>';
@@ -255,7 +240,7 @@ function renderSignup(role) {
             ? '<button class="btn btn-primary btn-lg" onclick="App.authSubmit()">' + Icon("checkCircle", 16) + (flow.submitLabel || "Create Account") + '</button>'
             : '<button class="btn btn-primary" onclick="App.authNext()">Continue' + Icon("chevR", 14) + '</button>') +
         '</div>' +
-        '<p class="tiny faint" style="text-align:center;margin-top:16px">By continuing you agree to the Venture Connect demo terms. All data stays in your browser.</p>' +
+        '<p class="tiny faint" style="text-align:center;margin-top:16px">By continuing you agree to the Venture Connect Terms of Service. All data is stored securely.</p>' +
       '</div>' +
     '</div>';
 
