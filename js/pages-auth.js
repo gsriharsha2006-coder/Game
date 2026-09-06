@@ -53,6 +53,7 @@ function renderAuth() {
           '<button class="chip" onclick="App.loginAs(\'hello@exampleincubator.io\')">' + Icon("layers", 12) + ' Demo Incubator</button>' +
           '<button class="chip" onclick="App.loginAs(\'events@hackvalley.dev\')">' + Icon("calendar", 12) + ' Demo Organizer</button>' +
         '</div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/auth/admin\')" style="margin-top:14px">' + Icon("shield", 14) + 'Admin Sign In</button>' +
       '</div>' +
     '</div>';
 
@@ -117,7 +118,9 @@ function renderLogin() {
           '<button class="chip" onclick="App.loginAs(\'nikhil@meridian.example\')">Investor</button>' +
           '<button class="chip" onclick="App.loginAs(\'hello@exampleincubator.io\')">Incubator</button>' +
           '<button class="chip" onclick="App.loginAs(\'events@hackvalley.dev\')">Organizer</button>' +
+          '<button class="chip" onclick="App.loginAs(\'admin@ventureconnect.internal\')">Admin</button>' +
         '</div>' +
+        '<button class="btn btn-ghost btn-sm" onclick="App.navigate(\'#/auth/admin\')" style="margin-top:14px">' + Icon("shield", 14) + 'Admin Sign In</button>' +
       '</div>' +
     '</div>';
 
@@ -278,9 +281,37 @@ function authSummary(role, flow) {
   '</div>';
 }
 
+/* ---------------- ADMIN SIGNIN ---------------- */
+function renderAdminAuth() {
+  const html =
+    '<nav class="land-nav">' +
+      '<a href="#/" class="vc-logo lg-nav" title="Venture Connect"><img src="assets/logo/logo-primary.png" alt="Venture Connect" /></a>' +
+      '<a href="#/auth/login" class="btn btn-ghost btn-sm" style="margin-left:auto">' + Icon("chevL", 13) + 'Back</a>' +
+    '</nav>' +
+
+    '<div class="auth-wrap" style="padding-top:60px">' +
+      '<div class="glass-strong card auth-form" style="max-width:520px">' +
+        '<div style="text-align:center;margin-bottom:24px">' +
+          '<span class="vc-logo lg-auth" style="justify-content:center;margin-bottom:16px"><img src="assets/logo/logo-primary.png" alt="Venture Connect" /></span>' +
+          '<h1 class="h2">Venture Connect Admin</h1>' +
+          '<p class="small muted" style="margin-top:4px">Internal quality control access only.</p>' +
+        '</div>' +
+        '<div class="field"><label>Admin Key</label><input class="input" id="admin-key" type="password" placeholder="Enter admin access key" /></div>' +
+        '<div class="field"><label>Password</label><input class="input" id="admin-pass" type="password" placeholder="Enter password" onkeydown="if(event.key===\'Enter\')App.adminLogin()" /></div>' +
+        '<button class="btn btn-primary btn-lg btn-block" onclick="App.adminLogin()">' + Icon("shield", 16) + 'Sign In as Admin</button>' +
+        '<div class="divider"></div>' +
+        '<p class="tiny faint" style="text-align:center">Admin access is restricted to Venture Connect internal team members only.</p>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById("app").innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
 /* ---------------- route dispatch ---------------- */
 function renderAuthPage(sub, role) {
   if (sub === "login") return renderLogin();
+  if (sub === "admin") return renderAdminAuth();
   if (sub === "signup") return renderSignup(role);
   return renderAuth();
 }

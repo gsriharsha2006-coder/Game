@@ -154,6 +154,14 @@ const Store = (() => {
     state.role = null;
     save();
   };
+  const adminLogin = (key, password) => {
+    if (key !== "vc-admin-key-2026" || password !== "admin1234") {
+      return { ok: false, err: "Invalid admin credentials." };
+    }
+    const adminAccount = { email: "admin@ventureconnect.internal", password: "admin1234", name: "Venture Connect Admin", role: "internal" };
+    setSession(adminAccount);
+    return { ok: true, account: adminAccount };
+  };
 
   /* new founders get their own startup record (kept out of discovery until gated) */
   const addUserStartup = (data) => {
@@ -457,13 +465,19 @@ const Store = (() => {
 
   const workspaceSnapshot = (startupId) => {
     const s = getStartup(startupId);
-    if (s && s.id === state.founder.startupId) return JSON.parse(JSON.stringify(state.founder.workspace));
+    if (s && s.id === state.founder.startupId) {
+      const snapshot = {};
+      WORKSPACE_SECTIONS.forEach(sec => {
+        snapshot[sec.key] = state.founder.workspace[sec.key] || "";
+      });
+      return JSON.parse(JSON.stringify(snapshot));
+    }
     return s ? JSON.parse(JSON.stringify(workspaceLikeStartup(s))) : {};
   };
   const workspaceLikeStartup = (s) => ({
     problem: s.problem, solution: s.solution, targetCustomer: s.targetCustomer,
     market: s.market, businessModel: s.businessModel, validation: s.validation,
-    competition: s.competition, advantage: s.advantage, funding: s.fundingAsk, useOfFunds: s.useOfFunds
+    competition: s.competition, advantage: s.advantage, funding: s.fundingAsk || "", useOfFunds: s.useOfFunds || ""
   });
   const daysFrom = (iso, days) => new Date(new Date(iso).getTime() + days * 86400000);
   const applicationLifecycle = (app, now) => {

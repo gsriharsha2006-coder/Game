@@ -477,6 +477,23 @@ const DEMO_ACCOUNTS = [
   { email: "events@hackvalley.dev", password: "demo1234", name: "Rahul Verma", role: "organizer" }
 ];
 
+/* Admin credentials - separate from demo accounts */
+const ADMIN_CREDENTIALS = {
+  key: "vc-admin-key-2026",
+  password: "admin1234",
+  name: "Venture Connect Admin",
+  role: "internal"
+};
+
+const DEMO_ADMIN = {
+  name: "Venture Connect Admin",
+  org: "Venture Connect",
+  role: "Quality Control",
+  bio: "Internal quality-control team. Reviews every application before it reaches investors and incubators."
+};
+
+DEMO_ACCOUNTS.push({ email: "admin@ventureconnect.internal", password: "admin1234", name: "Venture Connect Admin", role: "internal" });
+
 const DEMO_INCUBATOR = {
   name: "Priya Nair",
   email: "hello@exampleincubator.io",

@@ -169,6 +169,20 @@ const App = {
     if (!res.ok) { toast(res.err, "error", "alert"); return; }
     this.afterAuth(res.account);
   },
+  adminLogin() {
+    const key = val("admin-key");
+    const pass = val("admin-pass");
+    if (!key || !pass) { toast("Enter admin key and password", "error", "alert"); return; }
+    const res = Store.adminLogin(key, pass);
+    if (!res.ok) { toast(res.err, "error", "alert"); return; }
+    this.afterAuth(res.account);
+  },
+  afterAuth(account, suffix) {
+    toast("Welcome back, " + account.name.split(" ")[0] + (suffix || ""), "success", "spark");
+    this.navigate(ROLE_HOME[account.role] || "#/auth");
+  },
+  authSubmit() {
+
   loginAs(email) {
     const acc = Store.findAccount(email);
     if (!acc) { toast("Demo account not found", "error", "alert"); return; }
@@ -178,6 +192,14 @@ const App = {
   afterAuth(account, suffix) {
     toast("Welcome back, " + account.name.split(" ")[0] + (suffix || ""), "success", "spark");
     this.navigate(ROLE_HOME[account.role] || "#/auth");
+  },
+  adminLogin() {
+    const key = val("admin-key");
+    const pass = val("admin-pass");
+    if (!key || !pass) { toast("Enter admin key and password", "error", "alert"); return; }
+    const res = Store.adminLogin(key, pass);
+    if (!res.ok) { toast(res.err, "error", "alert"); return; }
+    this.afterAuth(res.account);
   },
   authSubmit() {
     const flow = AUTH_FLOWS[authRole];
@@ -272,13 +294,27 @@ const App = {
     if (role === "auth") { renderAuthPage(parts[1], parts[2]); return; }
     if (!["founder", "investor", "incubator", "organizer", "internal"].includes(role)) { renderLanding(); return; }
     if (!Store.getRole()) { location.hash = "#/auth"; renderAuthPage(); return; }
-    /* RBAC: an account may only open its own role's routes (or the active demo view,
-       or the internal review system). Everything else bounces to the role home. */
+    /* RBAC: an account may only open its own role's routes. Admin/internal can only be accessed by admin accounts. */
     const sAcc = Store.sessionUser();
-    if (sAcc && sAcc.role && sAcc.role !== role && role !== "internal" && role !== Store.getRole()) {
-      location.hash = ROLE_HOME[Store.getRole()] || ROLE_HOME[sAcc.role];
-      this.render();
-      return;
+    if (sAcc && sAcc.role) {
+      /* Internal/admin routes can ONLY be accessed by internal role accounts */
+      if (role === "internal" && sAcc.role !== "internal") {
+        location.hash = ROLE_HOME[sAcc.role] || "#/auth";
+        this.render();
+        return;
+      }
+      /* Non-internal accounts cannot access internal routes */
+      if (sAcc.role !== "internal" && role === "internal") {
+        location.hash = ROLE_HOME[sAcc.role] || "#/auth";
+        this.render();
+        return;
+      }
+      /* Users can only access their own role's routes */
+      if (sAcc.role !== role && role !== Store.getRole()) {
+        location.hash = ROLE_HOME[sAcc.role] || "#/auth";
+        this.render();
+        return;
+      }
     }
     if (Store.getRole() !== role) Store.setRole(role);
 
