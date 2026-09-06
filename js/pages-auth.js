@@ -1,6 +1,6 @@
 /* ============================================================
-   VENTURE CONNECT — Authentication & Onboarding
-   Entry screen · partner modal · login · 4 signup flows
+   VENTURE CONNECT  Authentication & Onboarding
+   Production-ready authentication flows for all user types
    ============================================================ */
 
 let authStep = 0;
@@ -31,7 +31,7 @@ function renderAuth() {
           '<div class="row-wrap" style="margin-bottom:18px">' +
             '<span class="tag">Idea Workspace</span><span class="tag">Opportunities</span><span class="tag">Applications</span><span class="tag">VC Readiness</span>' +
           '</div>' +
-          '<button class="btn btn-primary btn-lg btn-block" onclick="App.authSignup(\'founder\')">' + Icon("arrowR", 16) + 'Continue as Founder</button>' +
+          '<button class="btn btn-primary btn-lg btn-block" onclick="App.authSignup(\'founder\')">' + Icon("arrowR", 16) + 'Get Started as Founder</button>' +
         '</div>' +
         '<div class="glass glass-hover auth-card">' +
           '<div class="ac-ic indigo">' + Icon("eye", 26) + '</div>' +
@@ -40,7 +40,7 @@ function renderAuth() {
           '<div class="row-wrap" style="margin-bottom:18px">' +
             '<span class="tag">Discover</span><span class="tag">Opportunities</span><span class="tag">Applications</span><span class="tag">Messaging</span>' +
           '</div>' +
-          '<button class="btn btn-soft btn-lg btn-block" onclick="App.authPartnerModal()">' + Icon("arrowR", 16) + 'Continue as Investor / Ecosystem</button>' +
+          '<button class="btn btn-soft btn-lg btn-block" onclick="App.authPartnerModal()">' + Icon("arrowR", 16) + 'Get Started as Investor / Ecosystem</button>' +
         '</div>' +
       '</div>' +
 
@@ -93,7 +93,7 @@ function renderLogin() {
           '<p class="small muted" style="margin-top:4px">Sign in to continue your Venture Connect journey.</p>' +
         '</div>' +
         '<div class="field"><label>Email</label><input class="input" id="li-email" type="email" placeholder="you@example.com" /></div>' +
-        '<div class="field"><label>Password</label><input class="input" id="li-pass" type="password" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')App.loginSubmit()" /></div>' +
+        '<div class="field"><label>Password <span class="toggle-pw" onclick="togglePwVis(this)">' + Icon("eye", 14) + '</span></label><input class="input" id="li-pass" type="password" placeholder="Enter your password" onkeydown="if(event.key===\'Enter\')App.loginSubmit()" /></div>' +
         '<div class="row-between" style="margin-bottom:16px">' +
           '<button class="btn btn-ghost btn-sm" onclick="App.authForgot()">Forgot password?</button>' +
         '</div>' +
@@ -122,7 +122,7 @@ const AUTH_FLOWS = {
     icon: "spark",
     submitLabel: "Continue to Venture Connect",
     steps: [
-      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
+      { name: "Account", note: "Your login details  nothing else, yet.", fields: [
         { key: "fullName", label: "Full Name", type: "text", req: true, ph: "e.g. Aarav Mehta" },
         { key: "email", label: "Email", type: "email", req: true, ph: "you@example.com" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
@@ -142,7 +142,7 @@ const AUTH_FLOWS = {
     icon: "trending",
     submitLabel: "Enter Investor Dashboard",
     steps: [
-      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
+      { name: "Account", note: "Your login details  nothing else, yet.", fields: [
         { key: "fullName", label: "Full Name", type: "text", req: true, ph: "e.g. Nikhil Rao" },
         { key: "email", label: "Work Email", type: "email", req: true, ph: "you@firm.com" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
@@ -160,7 +160,7 @@ const AUTH_FLOWS = {
     icon: "layers",
     submitLabel: "Enter Incubator Dashboard",
     steps: [
-      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
+      { name: "Account", note: "Your login details  nothing else, yet.", fields: [
         { key: "fullName", label: "Full Name", type: "text", req: true, ph: "e.g. Priya Nair" },
         { key: "email", label: "Official Email", type: "email", req: true, ph: "hello@incubator.org" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
@@ -178,7 +178,7 @@ const AUTH_FLOWS = {
     icon: "calendar",
     submitLabel: "Enter Organizer Dashboard",
     steps: [
-      { name: "Account", note: "Your login details — nothing else, yet.", fields: [
+      { name: "Account", note: "Your login details  nothing else, yet.", fields: [
         { key: "org", label: "Organization / Organizer Name", type: "text", req: true, ph: "e.g. Hack the Valley Collective" },
         { key: "email", label: "Official Email", type: "email", req: true, ph: "events@org.com" },
         { key: "password", label: "Password", type: "password", req: true, ph: "Min. 6 characters" },
@@ -224,8 +224,8 @@ function renderSignup(role) {
         '<div style="margin-bottom:22px">' +
           '<span class="vc-logo lg-auth" style="justify-content:center;margin-bottom:14px"><img src="assets/logo/logo-primary.png" alt="Venture Connect" /></span>' +
           '<h1 class="h2" style="text-align:center">' + heroTitle + '</h1>' +
-          '<p class="small muted" style="text-align:center;margin-top:2px">' + (role === "founder" ? "Two quick steps and you are in — everything else happens inside the product." : "Two quick steps and you are in — preferences can be completed later from your profile.") + '</p>' +
-          '<p class="small faint" style="text-align:center;margin-top:10px">Step ' + (authStep + 1) + ' of ' + flow.steps.length + ' — ' + step.name + '</p>' +
+          '<p class="small muted" style="text-align:center;margin-top:2px">' + (role === "founder" ? "Two quick steps and you are in  everything else happens inside the product." : "Two quick steps and you are in  preferences can be completed later from your profile.") + '</p>' +
+          '<p class="small faint" style="text-align:center;margin-top:10px">Step ' + (authStep + 1) + ' of ' + flow.steps.length + '  ' + step.name + '</p>' +
           (step.note ? '<p class="tiny faint" style="text-align:center;margin-top:4px">' + step.note + '</p>' : '') +
         '</div>' +
 
@@ -261,8 +261,8 @@ function authSummary(role, flow) {
     rows.push(["Organization", d.org], ["Type", d.orgType], ["Email", d.email], ["Domains", (d.domains || []).join(", ")]);
   }
   return '<div style="padding:16px 18px;border-radius:16px;background:var(--accent-softer);border:1px solid rgba(99,102,241,.15)">' +
-    '<div class="semibold small" style="color:var(--accent-deep);margin-bottom:10px">' + Icon("checkCircle", 13) + ' Almost there — review your profile</div>' +
-    '<div class="kv" style="grid-template-columns:130px 1fr">' + rows.map(r => '<dt>' + r[0] + '</dt><dd>' + (r[1] || "—") + '</dd>').join("") + '</div>' +
+    '<div class="semibold small" style="color:var(--accent-deep);margin-bottom:10px">' + Icon("checkCircle", 13) + ' Almost there  review your profile</div>' +
+    '<div class="kv" style="grid-template-columns:130px 1fr">' + rows.map(r => '<dt>' + r[0] + '</dt><dd>' + (r[1] || "") + '</dd>').join("") + '</div>' +
   '</div>';
 }
 
@@ -282,7 +282,7 @@ function renderAdminAuth() {
           '<p class="small muted" style="margin-top:4px">Internal quality control access only.</p>' +
         '</div>' +
         '<div class="field"><label>Admin Key</label><input class="input" id="admin-key" type="password" placeholder="Enter admin access key" /></div>' +
-        '<div class="field"><label>Password</label><input class="input" id="admin-pass" type="password" placeholder="Enter password" onkeydown="if(event.key===\'Enter\')App.adminLogin()" /></div>' +
+        '<div class="field"><label>Password <span class="toggle-pw" onclick="togglePwVis(this)">' + Icon("eye", 14) + '</span></label><input class="input" id="admin-pass" type="password" placeholder="Enter password" onkeydown="if(event.key===\'Enter\')App.adminLogin()" /></div>' +
         '<button class="btn btn-primary btn-lg btn-block" onclick="App.adminLogin()">' + Icon("shield", 16) + 'Sign In as Admin</button>' +
         '<div class="divider"></div>' +
         '<p class="tiny faint" style="text-align:center">Admin access is restricted to Venture Connect internal team members only.</p>' +
@@ -312,7 +312,7 @@ function authField(f) {
     return '<div class="field"><label>' + f.label + (f.req ? ' <span class="req">*</span>' : '') + '</label><div class="row-wrap">' + chips + '</div></div>';
   }
   if (f.type === "select") {
-    const opts = ['<option value="">Select…</option>'].concat(f.options.map(o => '<option value="' + o + '"' + (d[f.key] === o ? " selected" : "") + '>' + o + '</option>')).join("");
+    const opts = ['<option value="">Select</option>'].concat(f.options.map(o => '<option value="' + o + '"' + (d[f.key] === o ? " selected" : "") + '>' + o + '</option>')).join("");
     return '<div class="field"><label>' + f.label + (f.req ? ' <span class="req">*</span>' : '') + '</label><select class="select" id="af-' + f.key + '" onchange="App.authFieldSet(\'' + f.key + '\',this.value)">' + opts + '</select></div>';
   }
   if (f.type === "textarea") {
