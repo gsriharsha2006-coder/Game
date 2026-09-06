@@ -254,9 +254,9 @@ function authSummary(role, flow) {
   if (role === "founder") {
     rows.push(["Name", d.fullName], ["Email", d.email], ["College", d.college], ["Graduation year", d.gradYear], ["Startup", d.startupName], ["Domain", d.industry], ["Stage", d.stage]);
   } else if (role === "investor") {
-    rows.push(["Name", d.fullName], ["Email", d.email], ["Firm", d.org], ["Domains", (d.sectors || []).join(", ")], ["Stages", (d.stages || []).join(", ")]);
+    rows.push(["Name", d.fullName], ["Email", d.email], ["Firm", d.org], ["Domains", (d.sectors || []).join(", ")], ["Stages", (typeof d.stages === "string" ? d.stages : (d.stages || []).join(", "))]);
   } else if (role === "incubator") {
-    rows.push(["Name", d.fullName], ["Email", d.email], ["Incubator", d.org], ["Focus", (d.sectors || []).join(", ")], ["Stages", (d.stages || []).join(", ")]);
+    rows.push(["Name", d.fullName], ["Email", d.email], ["Incubator", d.org], ["Focus", (d.sectors || []).join(", ")], ["Stages", (typeof d.stages === "string" ? d.stages : (d.stages || []).join(", "))]);
   } else {
     rows.push(["Organization", d.org], ["Type", d.orgType], ["Email", d.email], ["Domains", (d.domains || []).join(", ")]);
   }

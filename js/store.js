@@ -70,6 +70,22 @@ const Store = (() => {
     socials: { linkedin: "", twitter: "", website: "" }
   };
 
+  /* founder-facing application status mapping */
+  const founderAppStatus = (app) => {
+    if (!app) return { label: "Application Submitted", tone: "info" };
+    if (app.rejected) return { label: "Not Selected", tone: "danger" };
+    if (app.needsRevision) return { label: "Needs Revision", tone: "warning" };
+    const st = app.stage;
+    if (st >= 6) return app.gate && app.gate.decision === "passed"
+      ? { label: "Approved for Investor/Incubator Review", tone: "success" }
+      : { label: "Under Review", tone: "info" };
+    if (st === 5) return { label: "Validation Review", tone: "info" };
+    if (st === 4) return { label: "Interview", tone: "info" };
+    if (st === 3) return { label: "Pitch Review", tone: "info" };
+    if (st === 0) return { label: "Application Submitted", tone: "info" };
+    return { label: "Under Venture Connect Review", tone: "info" };
+  };
+
   function defaults() {
     return {
       role: null,
