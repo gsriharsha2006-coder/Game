@@ -178,7 +178,7 @@ const App = {
     this.afterAuth(res.account);
   },
   afterAuth(account) {
-    toast("Welcome back, " + account.name.split(" ")[0] + , "success", "spark");
+    toast("Welcome back, " + account.name.split(" ")[0] + ", " + "success", "spark");
     this.navigate(ROLE_HOME[account.role] || "#/auth");
   },
   authSubmit() {
@@ -190,7 +190,7 @@ const App = {
 
 
 
-    toast("Welcome back, " + account.name.split(" ")[0] + , "success", "spark");
+    toast("Welcome back, " + account.name.split(" ")[0] + ", " + "success", "spark");
     this.navigate(ROLE_HOME[account.role] || "#/auth");
   },
   adminLogin() {
